@@ -1,3 +1,4 @@
+"use client";
 import { useCartStore } from '../../store/cart';
 
 export default function CartPage() {
