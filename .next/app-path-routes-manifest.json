@@ -1,0 +1,9 @@
+{
+  "/_not-found/page": "/_not-found",
+  "/account/page": "/account",
+  "/admin/page": "/admin",
+  "/cart/page": "/cart",
+  "/checkout/page": "/checkout",
+  "/page": "/",
+  "/products/page": "/products"
+}
