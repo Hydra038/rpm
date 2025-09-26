@@ -117,9 +117,9 @@ export default function HomePage() {
                 key={category}
                 variant="outline"
                 asChild
-                className="h-16 text-center hover:bg-blue-50 hover:border-blue-300"
+                className="h-16 text-center font-medium text-gray-700 border-2 border-gray-200 hover:bg-blue-50 hover:border-blue-300 hover:text-blue-700"
               >
-                <Link href={`/products?category=${category.toLowerCase()}`}>
+                <Link href={`/products?category=${category.toLowerCase().replace(' ', '%20')}`}>
                   {category}
                 </Link>
               </Button>
