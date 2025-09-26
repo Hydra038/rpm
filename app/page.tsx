@@ -24,7 +24,7 @@ export default function HomePage() {
                   Browse Parts
                 </Link>
               </Button>
-              <Button size="lg" variant="outline" asChild className="border-white text-white hover:bg-white hover:text-blue-600">
+              <Button size="lg" variant="outline" asChild className="border-white border-2 bg-transparent text-white hover:bg-white hover:text-blue-600">
                 <Link href="/account">My Account</Link>
               </Button>
             </div>
