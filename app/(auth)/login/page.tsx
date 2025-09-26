@@ -1,29 +1,83 @@
 "use client";
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { signIn } from '../../../lib/supabase/auth';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const router = useRouter();
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
     setError('');
-    const { error } = await signIn(email, password);
-    if (error) setError(error.message);
-    // TODO: Redirect on success
+    setLoading(true);
+    
+    const result = await signIn(email, password);
+    setLoading(false);
+    
+    if (result.error) {
+      setError(result.error);
+    } else {
+      router.push('/account');
+    }
   }
 
   return (
-    <main className="container mx-auto p-4 max-w-md">
-      <h2 className="text-2xl font-bold mb-4">Login</h2>
-      <form className="space-y-4" onSubmit={handleLogin}>
-        <input className="w-full border p-2" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} />
-        <input className="w-full border p-2" type="password" placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} />
-        {error && <div className="text-red-500">{error}</div>}
-        <button className="bg-blue-600 text-white px-4 py-2 rounded">Login</button>
-      </form>
+    <main className="container mx-auto p-4">
+      <Card className="max-w-md mx-auto mt-8">
+        <CardHeader>
+          <CardTitle className="text-center">Login</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form className="space-y-4" onSubmit={handleLogin}>
+            <div className="space-y-2">
+              <label htmlFor="email" className="block text-sm font-medium">Email</label>
+              <input 
+                id="email"
+                type="email"
+                className="w-full border rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                placeholder="Enter your email" 
+                value={email} 
+                onChange={e => setEmail(e.target.value)}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <label htmlFor="password" className="block text-sm font-medium">Password</label>
+              <input 
+                id="password"
+                type="password" 
+                className="w-full border rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                placeholder="Enter your password" 
+                value={password} 
+                onChange={e => setPassword(e.target.value)}
+                required
+              />
+            </div>
+            {error && (
+              <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded">
+                {error}
+              </div>
+            )}
+            <Button 
+              type="submit" 
+              className="w-full" 
+              disabled={loading}
+            >
+              {loading ? 'Signing in...' : 'Sign In'}
+            </Button>
+            <div className="text-center mt-4">
+              <span className="text-sm text-gray-600">Don't have an account? </span>
+              <a href="/signup" className="text-blue-600 hover:underline">Sign up</a>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
     </main>
   );
 }
