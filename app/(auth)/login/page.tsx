@@ -21,7 +21,14 @@ export default function LoginPage() {
     setLoading(false);
     
     if (result.error) {
-      setError(result.error);
+      // Provide more helpful error messages
+      if (result.error.includes('Invalid login credentials')) {
+        setError('Invalid email or password. If you just signed up, please check your email and confirm your account first.');
+      } else if (result.error.includes('Email not confirmed')) {
+        setError('Please check your email and click the confirmation link to activate your account.');
+      } else {
+        setError(result.error);
+      }
     } else {
       router.push('/account');
     }

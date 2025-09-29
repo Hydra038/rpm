@@ -1,6 +1,6 @@
 import './globals.css';
 import type { ReactNode } from 'react';
-import { Navigation } from '../components/Navigation';
+import { Navigation } from '@/components/Navigation';
 
 export const metadata = {
   title: 'RPM - Auto Parts Marketplace',

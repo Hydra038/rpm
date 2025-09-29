@@ -36,8 +36,12 @@ export default function SignupPage() {
     if (result.error) {
       setError(result.error);
     } else {
-      setSuccess('Check your email to confirm your account, then you can login.');
-      setTimeout(() => router.push('/login'), 3000);
+      if (result.user && !result.user.email_confirmed_at) {
+        setSuccess('Please check your email and click the confirmation link to activate your account. Then you can sign in.');
+      } else {
+        setSuccess('Account created successfully! You can now sign in.');
+      }
+      setTimeout(() => router.push('/login'), 5000);
     }
   }
 

@@ -3,29 +3,72 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Button } from "@/components/ui/button";
-import { ShoppingCart, User, Menu, X, Car } from 'lucide-react';
+import { ShoppingCart, User, Menu, X, Car, Shield, Heart, Truck } from 'lucide-react';
 import { useCartStore } from '../store/cart';
 import { getUser, signOut } from '../lib/supabase/auth';
+import { supabase } from '../lib/supabase/client';
+import { CartDrawer } from './CartDrawer';
+import { WishlistDrawer } from './WishlistDrawer';
 
 export function Navigation() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isCartOpen, setIsCartOpen] = useState(false);
+  const [isWishlistOpen, setIsWishlistOpen] = useState(false);
   const [user, setUser] = useState<any>(null);
+  const [profile, setProfile] = useState<any>(null);
   const cartItems = useCartStore((state) => state.items);
   const router = useRouter();
 
   useEffect(() => {
     async function checkUser() {
-      const result = await getUser();
-      if (!result.error) {
-        setUser(result.user);
+      try {
+        const result = await getUser();
+        console.log('Navigation auth check:', result); // Debug log
+        
+        if (!result.error && result.user) {
+          setUser(result.user);
+          
+          // Check if user is admin
+          const { data: profileData } = await supabase
+            .from('user_profiles')
+            .select('*')
+            .eq('user_id', result.user.id)
+            .single();
+          
+          if (profileData) {
+            setProfile(profileData);
+          }
+        } else {
+          setUser(null);
+          setProfile(null);
+        }
+      } catch (error) {
+        console.error('Navigation auth error:', error);
+        setUser(null);
+        setProfile(null);
       }
     }
+    
     checkUser();
+    
+    // Listen for auth state changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log('Auth state change:', event, session?.user?.email);
+      if (session?.user) {
+        setUser(session.user);
+      } else {
+        setUser(null);
+        setProfile(null);
+      }
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
   const handleSignOut = async () => {
     await signOut();
     setUser(null);
+    setProfile(null);
     router.push('/');
   };
 
@@ -49,25 +92,52 @@ export function Navigation() {
             <Link href="/products" className="hover:text-blue-600 transition-colors">
               Products
             </Link>
+            <Link href="/track" className="hover:text-blue-600 transition-colors flex items-center gap-1">
+              <Truck className="w-4 h-4" />
+              Track Order
+            </Link>
             {user && (
-              <Link href="/account" className="hover:text-blue-600 transition-colors">
-                Account
-              </Link>
+              <>
+                <Link href="/account" className="hover:text-blue-600 transition-colors">
+                  Account
+                </Link>
+                {profile?.role === 'admin' && (
+                  <Link href="/admin" className="hover:text-red-600 transition-colors flex items-center gap-1">
+                    <Shield className="w-4 h-4" />
+                    Admin
+                  </Link>
+                )}
+              </>
             )}
           </div>
 
           {/* Right Side Actions */}
           <div className="flex items-center gap-4">
+            {/* Wishlist */}
+            {user && (
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="relative"
+                onClick={() => setIsWishlistOpen(true)}
+              >
+                <Heart className="w-5 h-5" />
+              </Button>
+            )}
+
             {/* Cart */}
-            <Button variant="ghost" size="sm" asChild className="relative">
-              <Link href="/cart">
-                <ShoppingCart className="w-5 h-5" />
-                {cartItemCount > 0 && (
-                  <span className="absolute -top-2 -right-2 bg-blue-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                    {cartItemCount}
-                  </span>
-                )}
-              </Link>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="relative"
+              onClick={() => setIsCartOpen(true)}
+            >
+              <ShoppingCart className="w-5 h-5" />
+              {cartItemCount > 0 && (
+                <span className="absolute -top-2 -right-2 bg-blue-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                  {cartItemCount}
+                </span>
+              )}
             </Button>
 
             {/* User Menu */}
@@ -75,9 +145,12 @@ export function Navigation() {
               {user ? (
                 <div className="flex items-center gap-2">
                   <Button variant="ghost" size="sm" asChild>
-                    <Link href="/account">
-                      <User className="w-4 h-4 mr-2" />
+                    <Link href="/account" className="flex items-center gap-2">
+                      <User className="w-4 h-4" />
                       {user.email?.split('@')[0]}
+                      {profile?.role === 'admin' && (
+                        <Shield className="w-3 h-3 text-red-600" />
+                      )}
                     </Link>
                   </Button>
                   <Button variant="ghost" size="sm" onClick={handleSignOut}>
@@ -126,15 +199,36 @@ export function Navigation() {
               >
                 Products
               </Link>
+              <Link
+                href="/track"
+                className="px-4 py-2 hover:bg-gray-50 rounded flex items-center gap-2"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                <Truck className="w-4 h-4" />
+                Track Order
+              </Link>
               {user ? (
                 <>
                   <Link
                     href="/account"
-                    className="px-4 py-2 hover:bg-gray-50 rounded"
+                    className="px-4 py-2 hover:bg-gray-50 rounded flex items-center gap-2"
                     onClick={() => setIsMenuOpen(false)}
                   >
                     Account ({user.email?.split('@')[0]})
+                    {profile?.role === 'admin' && (
+                      <Shield className="w-4 h-4 text-red-600" />
+                    )}
                   </Link>
+                  {profile?.role === 'admin' && (
+                    <Link
+                      href="/admin"
+                      className="px-4 py-2 hover:bg-gray-50 rounded flex items-center gap-2 text-red-600"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      <Shield className="w-4 h-4" />
+                      Admin Panel
+                    </Link>
+                  )}
                   <button
                     onClick={() => {
                       handleSignOut();
@@ -167,6 +261,12 @@ export function Navigation() {
           </div>
         )}
       </div>
+      
+      {/* Cart Drawer */}
+      <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
+      
+      {/* Wishlist Drawer */}
+      <WishlistDrawer isOpen={isWishlistOpen} onClose={() => setIsWishlistOpen(false)} />
     </nav>
   );
 }

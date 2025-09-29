@@ -1,5 +1,5 @@
 // Multi-currency stub for future support
-export const currencies = ['USD', 'EUR', 'GBP', 'AUD', 'JPY', 'CNY'];
-export function formatCurrency(amount: number, currency: string = 'USD') {
-  return new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(amount);
+export const currencies = ['GBP', 'USD', 'EUR', 'AUD', 'JPY', 'CNY'];
+export function formatCurrency(amount: number, currency: string = 'GBP') {
+  return new Intl.NumberFormat('en-GB', { style: 'currency', currency }).format(amount);
 }
