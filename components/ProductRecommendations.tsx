@@ -98,7 +98,7 @@ export function ProductRecommendations({
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {recommendations.map((product) => (
-              <ProductCard key={product.id} product={product} />
+              <ProductCard key={product.id} {...product} id={product.id.toString()} />
             ))}
           </div>
         </CardContent>
@@ -116,7 +116,7 @@ export function ProductRecommendations({
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               {recentlyViewed.slice(0, 4).map((product) => (
-                <ProductCard key={product.id} product={product} />
+                <ProductCard key={product.id} {...product} id={product.id.toString()} />
               ))}
             </div>
           </CardContent>

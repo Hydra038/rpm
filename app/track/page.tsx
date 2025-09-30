@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -31,7 +31,7 @@ interface OrderData {
   }>;
 }
 
-export default function OrderTrackingPage() {
+function TrackContent() {
   const searchParams = useSearchParams();
   const [trackingNumber, setTrackingNumber] = useState('');
   const [orderData, setOrderData] = useState<OrderData | null>(null);
@@ -230,7 +230,7 @@ export default function OrderTrackingPage() {
               className="flex-1 border rounded-md px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
               onKeyDown={(e) => e.key === 'Enter' && handleTrackOrder()}
             />
-            <Button onClick={handleTrackOrder} disabled={loading} className="px-8">
+            <Button onClick={() => handleTrackOrder()} disabled={loading} className="px-8">
               {loading ? 'Tracking...' : 'Track Order'}
             </Button>
           </div>
@@ -401,5 +401,13 @@ export default function OrderTrackingPage() {
         </div>
       )}
     </main>
+  );
+}
+
+export default function OrderTrackingPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <TrackContent />
+    </Suspense>
   );
 }
