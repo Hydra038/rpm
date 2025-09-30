@@ -24,42 +24,45 @@ export async function fetchProducts({ make, model, year, category, search, limit
   search?: string;
   limit?: number 
 }) {
-  let query = supabase
-    .from('parts')
-    .select('*')
-    .limit(limit);
+  console.log('fetchProducts called with:', { make, model, year, category, search, limit });
+  
+  try {
+    // Use the API endpoint instead of direct Supabase call
+    const params = new URLSearchParams();
+    if (make) params.append('make', make);
+    if (model) params.append('model', model);
+    if (year) params.append('year', year.toString());
+    if (category) params.append('category', category);
+    if (search) params.append('search', search);
+    if (limit) params.append('limit', limit.toString());
 
-  // Filter by search query if provided
-  if (search && search.trim()) {
-    const searchFormatted = search.toLowerCase().trim();
-    query = query.or(`name.ilike.%${searchFormatted}%,description.ilike.%${searchFormatted}%,category.ilike.%${searchFormatted}%,part_number.ilike.%${searchFormatted}%`);
-  }
-
-  // Filter by category if provided
-  if (category) {
-    const categoryFormatted = category.toLowerCase().replace(/\+/g, ' ');
-    query = query.or(`category.ilike.%${categoryFormatted}%,name.ilike.%${categoryFormatted}%,description.ilike.%${categoryFormatted}%`);
-  }
-
-  // Filter by make if provided
-  if (make && make.trim()) {
-    query = query.or(`make.ilike.%${make}%,compatible_vehicles.ilike.%${make}%`);
-  }
-
-  // Filter by model if provided  
-  if (model && model.trim()) {
-    query = query.or(`model.ilike.%${model}%,compatible_vehicles.ilike.%${model}%`);
-  }
-
-  // Filter by year if provided
-  if (year) {
-    query = query.or(`year_from.lte.${year},year_to.gte.${year},compatible_vehicles.ilike.%${year}%`);
-  }
-
-  const { data, error } = await query.order('created_at', { ascending: false });
-  if (error) {
-    console.error('Error fetching products:', error);
+    const url = `/api/products?${params.toString()}`;
+    console.log('Fetching from API:', url);
+    
+    const response = await fetch(url);
+    
+    if (!response.ok) {
+      console.error('API request failed:', response.status, response.statusText);
+      return [];
+    }
+    
+    const result = await response.json();
+    console.log('API response:', { 
+      success: result.success, 
+      count: result.count,
+      hasProducts: !!result.products
+    });
+    
+    if (!result.success) {
+      console.error('API returned error:', result.error);
+      return [];
+    }
+    
+    console.log(`Successfully fetched ${result.count} products from API`);
+    return result.products || [];
+    
+  } catch (exception) {
+    console.error('Exception in fetchProducts:', exception);
     return [];
   }
-  return data || [];
 }

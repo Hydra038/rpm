@@ -63,24 +63,40 @@ function ProductsContent() {
     try {
       const response = await fetch('/api/seed', {
         method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
       });
       
+      console.log('Seed API response status:', response.status);
+      
       if (response.ok) {
-        // Refresh products after seeding
-        const newProducts = await fetchProducts({
-          make: filters.make,
-          model: filters.model,
-          year: filters.year ? Number(filters.year) : undefined,
-          category: filters.category,
-          search: searchQuery,
-          limit: 1000,
-        });
-        setProducts(newProducts);
-        setTotalCount(newProducts.length);
-        // Refresh categories too in case new ones were added
-        fetchCategories().then(setCategories);
+        try {
+          const result = await response.json();
+          console.log('Seed API result:', result);
+          
+          // Refresh products after seeding
+          const newProducts = await fetchProducts({
+            make: filters.make,
+            model: filters.model,
+            year: filters.year ? Number(filters.year) : undefined,
+            category: filters.category,
+            search: searchQuery,
+            limit: 1000,
+          });
+          setProducts(newProducts);
+          setTotalCount(newProducts.length);
+          // Refresh categories too in case new ones were added
+          fetchCategories().then(setCategories);
+        } catch (jsonError) {
+          console.error('Failed to parse JSON response from seed API:', jsonError);
+          const text = await response.text();
+          console.log('Response text:', text);
+        }
       } else {
-        console.error('Failed to seed products');
+        console.error('Seed API failed with status:', response.status);
+        const text = await response.text();
+        console.log('Error response:', text);
       }
     } catch (error) {
       console.error('Error seeding products:', error);
