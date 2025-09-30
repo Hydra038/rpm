@@ -92,9 +92,10 @@ export function Navigation() {
             <Link href="/products" className="hover:text-blue-600 transition-colors">
               Products
             </Link>
-            <Link href="/track" className="hover:text-blue-600 transition-colors flex items-center gap-1">
+            <Link href="/track" className="hover:text-blue-600 transition-colors flex items-center gap-1 px-2 py-1 rounded-md hover:bg-blue-50">
               <Truck className="w-4 h-4" />
-              Track Order
+              <span className="hidden lg:inline">Track Order</span>
+              <span className="lg:hidden">Track</span>
             </Link>
             {user && (
               <>
@@ -201,11 +202,11 @@ export function Navigation() {
               </Link>
               <Link
                 href="/track"
-                className="px-4 py-2 hover:bg-gray-50 rounded flex items-center gap-2"
+                className="px-4 py-3 hover:bg-gray-50 rounded-lg flex items-center gap-3 min-h-[48px] text-base font-medium transition-colors"
                 onClick={() => setIsMenuOpen(false)}
               >
-                <Truck className="w-4 h-4" />
-                Track Order
+                <Truck className="w-5 h-5 text-blue-600" />
+                Track Your Order
               </Link>
               {user ? (
                 <>

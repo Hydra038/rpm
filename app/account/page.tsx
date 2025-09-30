@@ -397,12 +397,13 @@ export default function AccountPage() {
                                   size="sm"
                                   variant="outline"
                                   asChild
-                                  className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                                  className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 min-h-[40px] px-3 py-2 text-sm font-medium"
                                 >
-                                  <a href={`/track?order=${order.tracking_number || order.id}`} target="_blank">
-                                    <Truck className="h-4 w-4 mr-1" />
-                                    Track Order
-                                    <ExternalLink className="h-3 w-3 ml-1" />
+                                  <a href={`/track?order=${order.tracking_number || order.id}`} target="_blank" className="flex items-center gap-1 no-underline">
+                                    <Truck className="h-4 w-4" />
+                                    <span className="hidden xs:inline">Track Order</span>
+                                    <span className="xs:hidden">Track</span>
+                                    <ExternalLink className="h-3 w-3" />
                                   </a>
                                 </Button>
                               )}
