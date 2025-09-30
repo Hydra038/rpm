@@ -92,75 +92,44 @@ export default function CheckoutPage() {
       const shippingObj = parseAddress(shippingAddress);
       const billingObj = sameAsShipping ? shippingObj : parseAddress(billingAddress);
 
-      // Calculate payment due date (7 days for half payment)
-      const paymentDueDate = paymentPlan === 'half' 
-        ? new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
-        : null;
+      // Prepare order data
+      const orderData = {
+        user_id: user.id,
+        items: items,
+        total_amount: total,
+        shipping_address: shippingObj,
+        billing_address: billingObj,
+        payment_method: paymentMethod,
+        payment_plan: paymentPlan,
+        notes: `Payment plan: ${paymentPlan}. Payment method: ${paymentMethod}. Customer: ${user.email}`
+      };
 
-      // Create the order
-      const { data: order, error: orderError } = await supabase
-        .from('orders')
-        .insert({
-          user_id: user.id,
-          total_amount: total,
-          status: 'pending',
-          payment_status: 'pending',
-          payment_method: paymentMethod,
-          payment_plan: paymentPlan,
-          amount_paid: 0,
-          remaining_amount: paymentAmount,
-          payment_due_date: paymentDueDate,
-          shipping_address: shippingObj,
-          billing_address: billingObj,
-          notes: `Payment plan: ${paymentPlan}. Payment method: ${paymentMethod}.`
-        })
-        .select()
-        .single();
+      console.log('Submitting order:', orderData);
 
-      if (orderError) {
-        console.error('Order creation error:', orderError);
-        throw new Error(`Failed to create order: ${orderError.message}`);
+      // Create the order using our API endpoint
+      const response = await fetch('/api/orders', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(orderData)
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        console.error('Order creation failed:', result);
+        throw new Error(result.error || 'Failed to create order');
       }
 
-      // Create order items
-      const orderItems = items.map(item => ({
-        order_id: order.id,
-        part_id: parseInt(item.id),
-        quantity: item.quantity,
-        price: item.price
-      }));
-
-      const { error: itemsError } = await supabase
-        .from('order_items')
-        .insert(orderItems);
-
-      if (itemsError) {
-        console.error('Order items creation error:', itemsError);
-        throw new Error(`Failed to create order items: ${itemsError.message}`);
-      }
-
-      // Create initial payment transaction
-      const { error: transactionError } = await supabase
-        .from('payment_transactions')
-        .insert({
-          order_id: order.id,
-          transaction_type: 'payment',
-          payment_method: paymentMethod,
-          amount: paymentAmount,
-          status: 'pending',
-          notes: `Initial ${paymentPlan} payment. ${paymentMethod === 'bank_transfer' ? 'Awaiting bank transfer.' : 'PayPal payment pending.'}`
-        });
-
-      if (transactionError) {
-        console.error('Transaction creation error:', transactionError);
-      }
-
-      setSuccess(`Order #${order.id} placed successfully!`);
+      console.log('Order created successfully:', result);
+      setSuccess(`Order #${result.order.id} placed successfully!`);
       clearCart();
       
       // Redirect to order confirmation with payment details
-      setTimeout(() => router.push(`/order-confirmation/${order.id}`), 3000);
+      setTimeout(() => router.push(`/order-confirmation/${result.order.id}`), 3000);
     } catch (err: any) {
+      console.error('Order submission error:', err);
       setError(err.message || 'Failed to place order. Please try again.');
     } finally {
       setLoading(false);
@@ -476,6 +445,22 @@ export default function CheckoutPage() {
                   </CardContent>
                 </Card>
               )}
+
+              {/* Validation messages */}
+              {(!shippingAddress || !paymentMethod) && (
+                <Card>
+                  <CardContent className="p-4">
+                    <div className="bg-yellow-50 border border-yellow-200 text-yellow-700 p-3 rounded">
+                      <h4 className="font-medium mb-2">Please complete the following:</h4>
+                      <ul className="text-sm space-y-1">
+                        {!shippingAddress && <li>• Enter your shipping address</li>}
+                        {!paymentMethod && <li>• Select a payment method</li>}
+                        {items.length === 0 && <li>• Add items to your cart</li>}
+                      </ul>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
             </form>
           </div>
 
@@ -530,16 +515,15 @@ export default function CheckoutPage() {
                     )}
                   </div>
                   
-                  <Button
-                    onClick={handleSubmit}
-                    disabled={loading || !shippingAddress || !paymentMethod}
-                    className="w-full"
-                    size="lg"
-                  >
-                    {loading ? 'Processing...' : `Place Order - ${formatCurrency(paymentAmount)}`}
-                  </Button>
-                  
-                  <div className="flex items-center gap-2 text-sm text-gray-600 bg-gray-50 p-3 rounded">
+              <Button
+                type="button"
+                onClick={handleSubmit}
+                disabled={loading || !shippingAddress || !paymentMethod || items.length === 0}
+                className="w-full"
+                size="lg"
+              >
+                {loading ? 'Processing Order...' : `Place Order - ${formatCurrency(paymentAmount)}`}
+              </Button>                  <div className="flex items-center gap-2 text-sm text-gray-600 bg-gray-50 p-3 rounded">
                     <Lock className="w-4 h-4" />
                     <span>Secure checkout with 256-bit SSL encryption</span>
                   </div>
