@@ -119,7 +119,15 @@ export default function CheckoutPage() {
 
       if (!response.ok) {
         console.error('Order creation failed:', result);
-        throw new Error(result.error || 'Failed to create order');
+        
+        // Provide more specific error messages
+        if (result.error?.includes('Supabase')) {
+          throw new Error('Database configuration error. Please contact support.');
+        } else if (result.error?.includes('service_role')) {
+          throw new Error('Server configuration error. Please try again or contact support.');
+        } else {
+          throw new Error(result.error || 'Failed to create order. Please try again.');
+        }
       }
 
       console.log('Order created successfully:', result);

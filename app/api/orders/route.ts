@@ -3,10 +3,30 @@ import { createClient } from '@supabase/supabase-js';
 
 export async function POST(request: NextRequest) {
   try {
+    // Check if required environment variables are available
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+    if (!supabaseUrl) {
+      return NextResponse.json(
+        { error: 'Supabase URL is not configured' },
+        { status: 500 }
+      );
+    }
+
+    if (!serviceRoleKey && !anonKey) {
+      return NextResponse.json(
+        { error: 'Supabase keys are not configured' },
+        { status: 500 }
+      );
+    }
+
     // Create service role client to bypass RLS for order creation
+    // Fall back to anon key if service role key is not available
     const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      supabaseUrl,
+      serviceRoleKey || anonKey!,
       {
         auth: {
           autoRefreshToken: false,
@@ -14,6 +34,8 @@ export async function POST(request: NextRequest) {
         }
       }
     );
+
+    console.log('Using Supabase with key type:', serviceRoleKey ? 'service_role' : 'anon');
 
     const body = await request.json();
     console.log('Creating order with data:', body);

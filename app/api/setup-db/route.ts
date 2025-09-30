@@ -3,10 +3,27 @@ import { createClient } from '@supabase/supabase-js';
 
 export async function POST() {
   try {
-    // Use service role key for admin operations
+    // Check if required environment variables are available
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+    if (!supabaseUrl || (!serviceRoleKey && !anonKey)) {
+      return NextResponse.json({
+        success: false,
+        error: 'Supabase configuration missing',
+        message: 'Please check your environment variables',
+        required: [
+          'NEXT_PUBLIC_SUPABASE_URL',
+          'SUPABASE_SERVICE_ROLE_KEY (recommended) or NEXT_PUBLIC_SUPABASE_ANON_KEY'
+        ]
+      });
+    }
+
+    // Use service role key for admin operations, fallback to anon key
     const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      supabaseUrl,
+      serviceRoleKey || anonKey!,
       {
         auth: {
           autoRefreshToken: false,
@@ -14,6 +31,8 @@ export async function POST() {
         }
       }
     );
+
+    console.log('Setup DB using key type:', serviceRoleKey ? 'service_role' : 'anon');
 
     console.log('Creating tables...');
     
