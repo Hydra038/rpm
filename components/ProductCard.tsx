@@ -123,17 +123,17 @@ export function ProductCard({
           {/* Badges */}
           <div className="absolute top-2 left-2 z-10 flex flex-col gap-1">
             {isOnSale && (
-              <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full font-medium">
+              <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full font-medium shadow-sm">
                 Sale
               </span>
             )}
             {stock_quantity !== undefined && stock_quantity < 5 && stock_quantity > 0 && (
-              <span className="bg-orange-500 text-white text-xs px-2 py-1 rounded-full font-medium">
+              <span className="bg-orange-500 text-white text-xs px-2 py-1 rounded-full font-medium shadow-sm">
                 Low Stock
               </span>
             )}
             {stock_quantity === 0 && (
-              <span className="bg-gray-500 text-white text-xs px-2 py-1 rounded-full font-medium">
+              <span className="bg-gray-500 text-white text-xs px-2 py-1 rounded-full font-medium shadow-sm">
                 Out of Stock
               </span>
             )}
@@ -146,7 +146,7 @@ export function ProductCard({
               size="sm"
               onClick={toggleWishlist}
               disabled={addingToWishlist}
-              className="w-8 h-8 p-0 bg-white/80 hover:bg-white backdrop-blur-sm rounded-full"
+              className="w-9 h-9 sm:w-8 sm:h-8 p-0 bg-white/90 hover:bg-white backdrop-blur-sm rounded-full shadow-sm"
             >
               <Heart 
                 className={`w-4 h-4 ${
@@ -181,14 +181,14 @@ export function ProductCard({
           )}
         </div>
         
-        <div className="p-4">
+        <div className="p-3 sm:p-4">
           {/* Category */}
           {category && (
             <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">{category}</p>
           )}
           
           {/* Product Name */}
-          <h3 className="font-semibold text-lg mb-2 line-clamp-2 min-h-[2.5rem] group-hover:text-blue-600 transition-colors">
+          <h3 className="font-semibold text-base sm:text-lg mb-2 line-clamp-2 min-h-[2.5rem] group-hover:text-blue-600 transition-colors leading-tight">
             {name}
           </h3>
           
@@ -211,7 +211,7 @@ export function ProductCard({
           
           {/* Price */}
           <div className="flex items-center gap-2 mb-3">
-            <span className="text-2xl font-bold text-blue-600">
+            <span className="text-xl sm:text-2xl font-bold text-blue-600">
               {formatCurrency(price)}
             </span>
             {isOnSale && originalPrice && (
@@ -242,11 +242,12 @@ export function ProductCard({
           <Button
             onClick={handleAddToCart}
             disabled={stock_quantity === 0 || addingToCart}
-            className="w-full gap-2"
+            className="w-full gap-2 h-9 sm:h-10 text-sm font-medium"
             size="sm"
           >
             <ShoppingCart className="w-4 h-4" />
-            {addingToCart ? 'Adding...' : stock_quantity === 0 ? 'Out of Stock' : 'Add to Cart'}
+            <span className="sm:hidden">{addingToCart ? 'Adding...' : stock_quantity === 0 ? 'Out of Stock' : 'Add to Cart'}</span>
+            <span className="hidden sm:inline">{addingToCart ? 'Adding...' : stock_quantity === 0 ? 'Out of Stock' : 'Add to Cart'}</span>
           </Button>
         </div>
       </CardContent>

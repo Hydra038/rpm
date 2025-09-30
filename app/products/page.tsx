@@ -113,21 +113,21 @@ function ProductsContent() {
   const hasActiveFilters = filters.make || filters.model || filters.year || filters.category || searchQuery;
 
   return (
-    <main className="container mx-auto p-4 space-y-6">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">Auto Parts & Accessories</h1>
-        <p className="text-gray-600">Find the perfect parts for your vehicle</p>
+    <main className="container mx-auto px-2 sm:px-4 py-4 space-y-4 sm:space-y-6">
+      <div className="mb-6 sm:mb-8 text-center sm:text-left">
+        <h1 className="text-2xl sm:text-3xl font-bold mb-2">Auto Parts & Accessories</h1>
+        <p className="text-gray-600 text-sm sm:text-base">Find the perfect parts for your vehicle</p>
       </div>
 
       {/* VIN Lookup and Search */}
       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Car className="w-5 h-5" />
+        <CardHeader className="pb-3 sm:pb-6">
+          <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
+            <Car className="w-4 h-4 sm:w-5 sm:h-5" />
             Find Your Parts
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-6">
+        <CardContent className="space-y-4 sm:space-y-6 p-3 sm:p-6">
           <VinLookup onVehicleSelect={setSelectedVehicle} />
           <SearchBar onSearch={setSearchQuery} products={products} />
         </CardContent>
@@ -135,61 +135,61 @@ function ProductsContent() {
 
       {/* Category Grid */}
       <Card>
-        <CardContent className="p-4">
-          <h3 className="text-lg font-semibold mb-4">Browse by Category</h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <CardContent className="p-3 sm:p-4">
+          <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4">Browse by Category</h3>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 sm:gap-4 mb-4 sm:mb-6">
             {categories.map((category) => (
               <Button
                 key={category}
                 variant={filters.category === category ? "default" : "outline"}
-                className="h-12 text-sm"
+                className="h-10 sm:h-12 text-xs sm:text-sm px-2 sm:px-4 rounded-lg"
                 onClick={() => setFilters(f => ({ 
                   ...f, 
                   category: f.category === category ? '' : category 
                 }))}
               >
-                {category}
+                <span className="truncate">{category}</span>
               </Button>
             ))}
           </div>
           {categories.length === 0 && (
-            <p className="text-gray-500 text-center">Loading categories...</p>
+            <p className="text-gray-500 text-center text-sm">Loading categories...</p>
           )}
         </CardContent>
       </Card>
 
       {/* Vehicle Filters */}
       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Filter className="w-5 h-5" />
+        <CardHeader className="pb-3 sm:pb-6">
+          <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
+            <Filter className="w-4 h-4 sm:w-5 sm:h-5" />
             Vehicle Filters
           </CardTitle>
         </CardHeader>
-        <CardContent className="p-4">
-          <div className="flex flex-wrap gap-3 mb-4">
-            <div className="flex-1 min-w-[200px]">
-              <label className="block text-sm font-medium mb-1">Make</label>
+        <CardContent className="p-3 sm:p-4">
+          <div className="space-y-3 sm:space-y-0 sm:flex sm:flex-wrap sm:gap-3 mb-4">
+            <div className="flex-1 sm:min-w-[200px]">
+              <label className="block text-sm font-medium mb-1 text-gray-700">Make</label>
               <input 
-                className="w-full border rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
                 placeholder="e.g. Toyota, Honda" 
                 value={filters.make} 
                 onChange={e => setFilters(f => ({ ...f, make: e.target.value }))} 
               />
             </div>
-            <div className="flex-1 min-w-[200px]">
-              <label className="block text-sm font-medium mb-1">Model</label>
+            <div className="flex-1 sm:min-w-[200px]">
+              <label className="block text-sm font-medium mb-1 text-gray-700">Model</label>
               <input 
-                className="w-full border rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
                 placeholder="e.g. Camry, Civic" 
                 value={filters.model} 
                 onChange={e => setFilters(f => ({ ...f, model: e.target.value }))} 
               />
             </div>
-            <div className="flex-1 min-w-[150px]">
-              <label className="block text-sm font-medium mb-1">Year</label>
+            <div className="flex-1 sm:min-w-[150px]">
+              <label className="block text-sm font-medium mb-1 text-gray-700">Year</label>
               <input 
-                className="w-full border rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
                 placeholder="e.g. 2020" 
                 value={filters.year} 
                 onChange={e => setFilters(f => ({ ...f, year: e.target.value }))} 
@@ -197,19 +197,19 @@ function ProductsContent() {
             </div>
           </div>
           {hasActiveFilters && (
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-600">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 sm:gap-0">
+              <span className="text-sm text-gray-600 text-center sm:text-left">
                 {products.length} product{products.length !== 1 ? 's' : ''} found
                 {searchQuery && ` for "${searchQuery}"`}
               </span>
-              <Button variant="outline" size="sm" onClick={clearFilters} className="flex items-center gap-2">
+              <Button variant="outline" size="sm" onClick={clearFilters} className="flex items-center gap-2 w-full sm:w-auto justify-center">
                 <X className="w-4 h-4" />
                 Clear All Filters
               </Button>
             </div>
           )}
           {!hasActiveFilters && totalCount > 0 && (
-            <div className="text-sm text-gray-600">
+            <div className="text-sm text-gray-600 text-center sm:text-left">
               Showing {products.length} of {totalCount} products
             </div>
           )}
@@ -217,14 +217,14 @@ function ProductsContent() {
       </Card>
 
       {loading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6">
           {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
             <Card key={i}>
-              <CardContent className="p-4">
-                <Skeleton className="h-48 w-full mb-4" />
+              <CardContent className="p-3 sm:p-4">
+                <Skeleton className="h-40 sm:h-48 w-full mb-3 sm:mb-4 rounded-lg" />
                 <Skeleton className="h-4 w-3/4 mb-2" />
                 <Skeleton className="h-4 w-1/2 mb-2" />
-                <Skeleton className="h-8 w-full" />
+                <Skeleton className="h-8 w-full rounded-lg" />
               </CardContent>
             </Card>
           ))}
@@ -255,8 +255,8 @@ function ProductsContent() {
           </CardContent>
         </Card>
       ) : (
-        <div className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <div className="space-y-4 sm:space-y-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6">
             {products?.map((product: any) => (
               <ProductCard
                 key={product.id}
