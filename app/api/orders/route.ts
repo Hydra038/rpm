@@ -16,10 +16,19 @@ export async function POST(request: NextRequest) {
     }
 
     if (!serviceRoleKey && !anonKey) {
-      return NextResponse.json(
-        { error: 'Supabase keys are not configured' },
-        { status: 500 }
-      );
+      return NextResponse.json({
+        error: 'Supabase API keys not configured',
+        message: 'Please set up your Supabase API keys',
+        instructions: [
+          '1. Go to https://supabase.com/dashboard',
+          '2. Select project: mhfdvmeaipmuowjujyrc',
+          '3. Go to Settings → API',
+          '4. Copy anon and service_role keys',
+          '5. Update .env.local file',
+          '6. Restart development server'
+        ],
+        helpFile: 'See SUPABASE_SETUP.md for detailed setup guide'
+      }, { status: 500 });
     }
 
     // Create service role client to bypass RLS for order creation

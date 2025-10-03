@@ -41,7 +41,7 @@ export async function GET() {
       }
     );
 
-    // Test basic connection
+    // Test basic connection with more detailed error info
     const { data, error } = await supabase
       .from('parts')
       .select('id')
@@ -50,7 +50,10 @@ export async function GET() {
     const connectionTest = {
       connected: !error,
       error: error?.message,
-      keyType: serviceRoleKey ? 'service_role' : 'anon'
+      errorDetails: error,
+      keyType: serviceRoleKey ? 'service_role' : 'anon',
+      keyPreview: (serviceRoleKey || anonKey)?.substring(0, 20) + '...',
+      urlCorrect: supabaseUrl === 'https://mhfdvmeaipmuowjujyrc.supabase.co'
     };
 
     // Test order creation capability (check if orders table exists)

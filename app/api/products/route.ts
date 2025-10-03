@@ -45,6 +45,26 @@ export async function GET(request: Request) {
 
     if (error) {
       console.error('API: Error fetching products:', error);
+      
+      // Provide helpful error message for API key issues
+      if (error.message?.includes('Invalid API key')) {
+        return NextResponse.json({
+          success: false,
+          error: 'Supabase API key invalid',
+          message: 'Your Supabase API keys need to be updated',
+          instructions: [
+            '1. Go to https://supabase.com/dashboard',
+            '2. Select project: mhfdvmeaipmuowjujyrc', 
+            '3. Go to Settings → API',
+            '4. Copy fresh anon and service_role keys',
+            '5. Update .env.local file',
+            '6. Restart development server'
+          ],
+          helpFile: 'See SUPABASE_SETUP.md for setup guide',
+          products: []
+        }, { status: 500 });
+      }
+      
       return NextResponse.json({
         success: false,
         error: error.message,
