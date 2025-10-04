@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import { supabase } from '../../../lib/supabase/client';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { User, Settings, Package, ShoppingCart, BarChart3, LogOut, CreditCard } from 'lucide-react';
+import { User, Settings, Package, ShoppingCart, BarChart3, LogOut, CreditCard, MessageCircle } from 'lucide-react';
 import Link from 'next/link';
 
 interface AdminLayoutProps {
@@ -215,6 +215,20 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
             >
               <CreditCard className="h-4 w-4" />
               Payment Settings
+            </Link>
+            <Link 
+              href="/admin/chat" 
+              className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium hover:bg-gray-100 transition-colors"
+            >
+              <MessageCircle className="h-4 w-4" />
+              Support Chat
+            </Link>
+            <Link 
+              href="/admin/images" 
+              className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium hover:bg-gray-100 transition-colors"
+            >
+              <Settings className="h-4 w-4" />
+              Images
             </Link>
             <Link 
               href="/admin/inventory" 

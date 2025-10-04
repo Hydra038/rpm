@@ -34,6 +34,9 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
+    const requestData = await request.json();
+    console.log('Received payment settings data:', requestData);
+    
     const {
       paypal_email,
       bank_name,
@@ -41,9 +44,15 @@ export async function POST(request: Request) {
       account_number,
       sort_code,
       swift_code,
+      iban,
       bank_address,
-      payment_instructions
-    } = await request.json();
+      payment_instructions,
+      paypal_enabled = true,
+      bank_transfer_enabled = true,
+      iban_enabled = false
+    } = requestData;
+    
+    console.log('Parsed boolean flags:', { paypal_enabled, bank_transfer_enabled, iban_enabled });
 
     // Use service role to bypass authentication issues for now
     const serviceSupabase = createClient(
@@ -71,8 +80,12 @@ export async function POST(request: Request) {
           account_number,
           sort_code,
           swift_code,
+          iban,
           bank_address,
           payment_instructions,
+          paypal_enabled,
+          bank_transfer_enabled,
+          iban_enabled,
           updated_at: new Date().toISOString()
         })
         .eq('id', existingSettings.id)
@@ -89,8 +102,12 @@ export async function POST(request: Request) {
           account_number,
           sort_code,
           swift_code,
+          iban,
           bank_address,
-          payment_instructions
+          payment_instructions,
+          paypal_enabled,
+          bank_transfer_enabled,
+          iban_enabled
         })
         .select()
         .single();
@@ -100,6 +117,8 @@ export async function POST(request: Request) {
       console.error('Error saving payment settings:', result.error);
       throw result.error;
     }
+
+    console.log('Successfully saved payment settings:', result.data);
 
     return NextResponse.json({ 
       message: 'Payment settings saved successfully',

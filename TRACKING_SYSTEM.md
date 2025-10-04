@@ -1,5 +1,55 @@
 # 📦 RPM Order Tracking System - Complete Implementation
 
+## 🎯 How Tracking Numbers Are Generated
+
+Your RPM Auto Parts system has **multiple ways** tracking numbers are assigned to orders:
+
+### 1. **Automatic Generation (Primary Method)**
+📍 **Location**: `/app/api/tracking/route.ts` (lines 48-53)
+
+**When It Triggers:**
+- When an order status is updated to **"shipped"**
+- Only if no tracking number already exists
+- Happens automatically without admin intervention
+
+**Generation Formula:**
+```javascript
+const generatedTracking = `RPM${Date.now().toString().slice(-8)}${Math.random().toString(36).substr(2, 3).toUpperCase()}`;
+```
+
+**Format Breakdown:**
+- **Prefix**: `RPM` (company identifier)
+- **Timestamp**: Last 8 digits of current timestamp  
+- **Random Code**: 3 random alphanumeric characters (uppercase)
+
+**Example Generated Numbers:**
+- `RPM12345678ABC`
+- `RPM87654321XYZ` 
+- `RPM19283746DEF`
+
+### 2. **Manual Assignment (Admin Override)**
+📍 **Location**: `/app/admin/orders/page.tsx`
+
+**How It Works:**
+- Admin can manually enter tracking numbers in the order edit form
+- Input field for `tracking_number` on line 501-502
+- Overrides automatic generation
+- Useful for orders shipped through external carriers
+
+### 3. **Pre-seeded Numbers (Development/Testing)**
+📍 **Location**: `/scripts/seed-tracking.ts`
+
+**Sample Format:**
+```javascript
+const SAMPLE_TRACKING_NUMBERS = [
+  'RPM12345678ABC',
+  'RPM87654321XYZ', 
+  'RPM19283746DEF',
+  'RPM65432187GHI',
+  'RPM98765432JKL'
+];
+```
+
 ## 🚀 What's Been Added
 
 ### 1. **Dedicated Order Tracking Page** (`/track`)

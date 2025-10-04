@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import AdminLayout from '../components/AdminLayout';
-import { CreditCard, Building, Save, AlertCircle, CheckCircle } from 'lucide-react';
+import { CreditCard, Building, Globe, Save, AlertCircle, CheckCircle } from 'lucide-react';
 
 interface PaymentSettings {
   id: number;
@@ -13,8 +13,12 @@ interface PaymentSettings {
   account_number: string;
   sort_code: string;
   swift_code: string;
+  iban: string;
   bank_address: string;
   payment_instructions: string;
+  paypal_enabled: boolean;
+  bank_transfer_enabled: boolean;
+  iban_enabled: boolean;
 }
 
 export default function AdminPaymentSettingsPage() {
@@ -29,8 +33,12 @@ export default function AdminPaymentSettingsPage() {
     account_number: '',
     sort_code: '',
     swift_code: '',
+    iban: '',
     bank_address: '',
-    payment_instructions: ''
+    payment_instructions: '',
+    paypal_enabled: true,
+    bank_transfer_enabled: true,
+    iban_enabled: false
   });
 
   useEffect(() => {
@@ -42,9 +50,10 @@ export default function AdminPaymentSettingsPage() {
     setMessage('');
 
     try {
-      const response = await fetch('/api/admin/payment-settings');
+      const response = await fetch('/api/admin/payment-settings?t=' + Date.now());
       if (response.ok) {
         const data = await response.json();
+        console.log('Loaded payment settings:', data.settings);
         if (data.settings) {
           setSettings(data.settings);
           setFormData({
@@ -54,8 +63,17 @@ export default function AdminPaymentSettingsPage() {
             account_number: data.settings.account_number || '',
             sort_code: data.settings.sort_code || '',
             swift_code: data.settings.swift_code || '',
+            iban: data.settings.iban || '',
             bank_address: data.settings.bank_address || '',
-            payment_instructions: data.settings.payment_instructions || ''
+            payment_instructions: data.settings.payment_instructions || '',
+            paypal_enabled: data.settings.paypal_enabled ?? true,
+            bank_transfer_enabled: data.settings.bank_transfer_enabled ?? true,
+            iban_enabled: data.settings.iban_enabled ?? false
+          });
+          console.log('FormData set with boolean flags:', {
+            paypal_enabled: data.settings.paypal_enabled,
+            bank_transfer_enabled: data.settings.bank_transfer_enabled,
+            iban_enabled: data.settings.iban_enabled
           });
         }
       } else {
@@ -73,6 +91,7 @@ export default function AdminPaymentSettingsPage() {
     setMessage('');
 
     try {
+      console.log('Saving payment settings:', formData);
       const response = await fetch('/api/admin/payment-settings', {
         method: 'POST',
         headers: {
@@ -100,7 +119,7 @@ export default function AdminPaymentSettingsPage() {
     }
   }
 
-  const handleInputChange = (field: string, value: string) => {
+  const handleInputChange = (field: string, value: string | boolean) => {
     setFormData(prev => ({
       ...prev,
       [field]: value
@@ -152,9 +171,27 @@ export default function AdminPaymentSettingsPage() {
           {/* PayPal Settings */}
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <CreditCard className="h-5 w-5 text-blue-600" />
-                PayPal Settings
+              <CardTitle className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <CreditCard className="h-5 w-5 text-blue-600" />
+                  PayPal Settings
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-gray-600">Enable PayPal</span>
+                  <button
+                    type="button"
+                    onClick={() => handleInputChange('paypal_enabled', !formData.paypal_enabled)}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                      formData.paypal_enabled ? 'bg-blue-600' : 'bg-gray-200'
+                    }`}
+                  >
+                    <span
+                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                        formData.paypal_enabled ? 'translate-x-6' : 'translate-x-1'
+                      }`}
+                    />
+                  </button>
+                </div>
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -177,9 +214,27 @@ export default function AdminPaymentSettingsPage() {
           {/* Bank Transfer Settings */}
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Building className="h-5 w-5 text-green-600" />
-                Bank Transfer Settings
+              <CardTitle className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Building className="h-5 w-5 text-green-600" />
+                  Bank Transfer Settings
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-gray-600">Enable Bank Transfer</span>
+                  <button
+                    type="button"
+                    onClick={() => handleInputChange('bank_transfer_enabled', !formData.bank_transfer_enabled)}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 ${
+                      formData.bank_transfer_enabled ? 'bg-green-600' : 'bg-gray-200'
+                    }`}
+                  >
+                    <span
+                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                        formData.bank_transfer_enabled ? 'translate-x-6' : 'translate-x-1'
+                      }`}
+                    />
+                  </button>
+                </div>
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -249,6 +304,49 @@ export default function AdminPaymentSettingsPage() {
                   rows={3}
                   className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
                 />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* IBAN Transfer Settings */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Globe className="h-5 w-5 text-purple-600" />
+                  IBAN International Transfer
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-gray-600">Enable IBAN</span>
+                  <button
+                    type="button"
+                    onClick={() => handleInputChange('iban_enabled', !formData.iban_enabled)}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 ${
+                      formData.iban_enabled ? 'bg-purple-600' : 'bg-gray-200'
+                    }`}
+                  >
+                    <span
+                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                        formData.iban_enabled ? 'translate-x-6' : 'translate-x-1'
+                      }`}
+                    />
+                  </button>
+                </div>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">IBAN Number</label>
+                <input
+                  type="text"
+                  value={formData.iban}
+                  onChange={(e) => handleInputChange('iban', e.target.value)}
+                  placeholder="GB29 NWBK 6016 1331 9268 19"
+                  className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                />
+                <p className="text-sm text-gray-600 mt-1">
+                  International Bank Account Number for customers outside your country
+                </p>
               </div>
             </CardContent>
           </Card>

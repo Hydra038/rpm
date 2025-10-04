@@ -33,8 +33,8 @@ interface Order {
   payment_status: string;
   tracking_number: string | null;
   created_at: string;
-  billing_address: any;
-  shipping_address: any;
+  billing_address: string;
+  delivery_address: string;
   order_items: Array<{
     quantity: number;
     price: number;
@@ -52,7 +52,11 @@ interface PaymentSettings {
   account_number: string;
   sort_code: string;
   swift_code: string;
+  iban: string;
   payment_instructions: string;
+  paypal_enabled: boolean;
+  bank_transfer_enabled: boolean;
+  iban_enabled: boolean;
 }
 
 export default function OrderConfirmationPage() {
@@ -337,15 +341,7 @@ export default function OrderConfirmationPage() {
                 </div>
                 
                 <div className="border-t pt-4 space-y-2">
-                  <div className="flex justify-between">
-                    <span>Subtotal</span>
-                    <span>{formatCurrency(order.total_amount - (order.total_amount * 0.20))}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>VAT (20%)</span>
-                    <span>{formatCurrency(order.total_amount * 0.20)}</span>
-                  </div>
-                  <div className="flex justify-between font-bold text-lg border-t pt-2">
+                  <div className="flex justify-between font-bold text-lg">
                     <span>Total</span>
                     <span>{formatCurrency(order.total_amount)}</span>
                   </div>
@@ -381,13 +377,10 @@ export default function OrderConfirmationPage() {
               <div>
                 <h4 className="font-medium mb-2">Shipping Address</h4>
                 <div className="p-3 bg-gray-50 rounded text-sm">
-                  {order.shipping_address ? (
-                    <>
-                      <p>{order.shipping_address.address_line1}</p>
-                      {order.shipping_address.address_line2 && <p>{order.shipping_address.address_line2}</p>}
-                      <p>{order.shipping_address.city}, {order.shipping_address.postcode}</p>
-                      <p>{order.shipping_address.country}</p>
-                    </>
+                  {order.delivery_address ? (
+                    <div className="whitespace-pre-line">
+                      {order.delivery_address}
+                    </div>
                   ) : (
                     <p>Address not available</p>
                   )}
@@ -398,12 +391,9 @@ export default function OrderConfirmationPage() {
                 <h4 className="font-medium mb-2">Billing Address</h4>
                 <div className="p-3 bg-gray-50 rounded text-sm">
                   {order.billing_address ? (
-                    <>
-                      <p>{order.billing_address.address_line1}</p>
-                      {order.billing_address.address_line2 && <p>{order.billing_address.address_line2}</p>}
-                      <p>{order.billing_address.city}, {order.billing_address.postcode}</p>
-                      <p>{order.billing_address.country}</p>
-                    </>
+                    <div className="whitespace-pre-line">
+                      {order.billing_address}
+                    </div>
                   ) : (
                     <p>Same as shipping address</p>
                   )}

@@ -11,9 +11,8 @@ export default function CartPage() {
   const { items, updateQuantity, removeFromCart, clearCart } = useCartStore();
   
   const subtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-  const shipping = subtotal > 50 ? 0 : 9.99;
-  const tax = subtotal * 0.20; // 20% VAT
-  const total = subtotal + shipping + tax;
+  const shipping = 9.99; // Standard shipping
+  const total = subtotal + shipping;
 
   if (items.length === 0) {
     return (
@@ -178,25 +177,13 @@ export default function CartPage() {
                     <span>{formatCurrency(subtotal)}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span>Shipping</span>
-                    <span className={shipping === 0 ? 'text-green-600' : ''}>
-                      {shipping === 0 ? 'Free' : formatCurrency(shipping)}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>VAT (20%)</span>
-                    <span>{formatCurrency(tax)}</span>
+                    <span>Standard Shipping</span>
+                    <span>{formatCurrency(shipping)}</span>
                   </div>
                   <div className="border-t pt-3 flex justify-between font-bold text-lg">
                     <span>Total</span>
                     <span>{formatCurrency(total)}</span>
                   </div>
-                  
-                  {subtotal < 50 && (
-                    <div className="text-sm text-blue-600 bg-blue-50 p-3 rounded-lg">
-                      Add {formatCurrency(50 - subtotal)} more for free shipping!
-                    </div>
-                  )}
                 </div>
                 
                 <Button asChild className="w-full mb-4" size="lg">

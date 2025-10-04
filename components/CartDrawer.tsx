@@ -148,12 +148,7 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
               <span>{formatCurrency(subtotal)}</span>
             </div>
             
-            {/* Free Shipping Indicator */}
-            {subtotal < 50 && (
-              <div className="text-sm text-gray-600 bg-blue-50 p-2 rounded">
-                Add {formatCurrency(50 - subtotal)} more for free shipping!
-              </div>
-            )}
+
             
             {/* Action Buttons */}
             <div className="space-y-2">

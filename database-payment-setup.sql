@@ -12,6 +12,10 @@ CREATE TABLE IF NOT EXISTS payment_settings (
   swift_code VARCHAR(20),
   bank_address TEXT,
   payment_instructions TEXT,
+  iban VARCHAR(34), -- International Bank Account Number for international transfers
+  paypal_enabled BOOLEAN DEFAULT true, -- Enable/disable PayPal payment option
+  bank_transfer_enabled BOOLEAN DEFAULT true, -- Enable/disable bank transfer payment option
+  iban_enabled BOOLEAN DEFAULT false, -- Enable/disable IBAN transfer payment option
   updated_by UUID REFERENCES auth.users(id),
   created_at TIMESTAMP DEFAULT NOW(),
   updated_at TIMESTAMP DEFAULT NOW()

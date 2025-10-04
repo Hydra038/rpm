@@ -11,7 +11,7 @@ export async function GET() {
 
     const { data: settings, error } = await supabase
       .from('payment_settings')
-      .select('paypal_email, bank_name, account_holder_name, account_number, sort_code, swift_code, bank_address, payment_instructions')
+      .select('paypal_email, bank_name, account_holder_name, account_number, sort_code, swift_code, iban, bank_address, payment_instructions, paypal_enabled, bank_transfer_enabled, iban_enabled')
       .order('id', { ascending: false })
       .limit(1)
       .single();
@@ -29,12 +29,19 @@ export async function GET() {
       account_number: '12345678',
       sort_code: '20-00-00',
       swift_code: 'BARCGB22',
+      iban: '',
       bank_address: '1 Churchill Place, London E14 5HP, UK',
-      payment_instructions: 'Please include your order number as payment reference. For bank transfers, allow 1-2 business days for processing.'
+      payment_instructions: 'Please include your order number as payment reference. For bank transfers, allow 1-2 business days for processing.',
+      paypal_enabled: true,
+      bank_transfer_enabled: true,
+      iban_enabled: false
     };
 
+    const finalSettings = settings || defaultSettings;
+    console.log('Checkout API returning settings:', finalSettings);
+    
     return NextResponse.json({ 
-      settings: settings || defaultSettings 
+      settings: finalSettings
     });
 
   } catch (error: any) {

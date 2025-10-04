@@ -16,8 +16,12 @@ interface PaymentSettings {
   account_number: string;
   sort_code: string;
   swift_code: string;
+  iban: string;
   bank_address: string;
   payment_instructions: string;
+  paypal_enabled: boolean;
+  bank_transfer_enabled: boolean;
+  iban_enabled: boolean;
 }
 
 export default function CheckoutPage() {
@@ -26,6 +30,7 @@ export default function CheckoutPage() {
   const [paymentSettings, setPaymentSettings] = useState<PaymentSettings | null>(null);
   const [billingAddress, setBillingAddress] = useState('');
   const [shippingAddress, setShippingAddress] = useState('');
+  const [country, setCountry] = useState('');
   const [sameAsShipping, setSameAsShipping] = useState(true);
   const [paymentMethod, setPaymentMethod] = useState('');
   const [paymentPlan, setPaymentPlan] = useState('full');
@@ -36,11 +41,23 @@ export default function CheckoutPage() {
   const router = useRouter();
 
   const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  const shipping_cost = subtotal > 50 ? 0 : 9.99;
-  const tax = subtotal * 0.20; // 20% VAT
-  const total = subtotal + shipping_cost + tax;
+  const shipping_cost = 9.99; // Standard shipping fee
+  const total = subtotal + shipping_cost;
   const halfPaymentAmount = (total / 2);
   const paymentAmount = paymentPlan === 'half' ? halfPaymentAmount : total;
+
+  const countries = [
+    'United States', 'United Kingdom', 'Canada', 'Australia', 'Germany', 'France', 'Italy', 'Spain', 'Netherlands', 'Belgium',
+    'Austria', 'Switzerland', 'Sweden', 'Norway', 'Denmark', 'Finland', 'Ireland', 'Portugal', 'Greece', 'Poland',
+    'Czech Republic', 'Hungary', 'Slovakia', 'Slovenia', 'Croatia', 'Romania', 'Bulgaria', 'Estonia', 'Latvia', 'Lithuania',
+    'Japan', 'South Korea', 'Singapore', 'Hong Kong', 'Taiwan', 'Malaysia', 'Thailand', 'Philippines', 'Indonesia', 'Vietnam',
+    'India', 'China', 'Israel', 'UAE', 'Saudi Arabia', 'Qatar', 'Kuwait', 'Bahrain', 'Oman', 'Jordan',
+    'South Africa', 'Egypt', 'Morocco', 'Tunisia', 'Algeria', 'Nigeria', 'Kenya', 'Ghana', 'Ethiopia', 'Tanzania',
+    'Brazil', 'Argentina', 'Chile', 'Colombia', 'Peru', 'Ecuador', 'Uruguay', 'Paraguay', 'Bolivia', 'Venezuela',
+    'Mexico', 'Costa Rica', 'Panama', 'Guatemala', 'Honduras', 'El Salvador', 'Nicaragua', 'Dominican Republic', 'Jamaica', 'Trinidad and Tobago',
+    'Russia', 'Ukraine', 'Belarus', 'Kazakhstan', 'Uzbekistan', 'Georgia', 'Armenia', 'Azerbaijan', 'Moldova', 'Kyrgyzstan',
+    'New Zealand', 'Fiji', 'Papua New Guinea', 'Samoa', 'Tonga', 'Vanuatu', 'Solomon Islands', 'Palau', 'Marshall Islands', 'Micronesia'
+  ];
 
   useEffect(() => {
     async function initialize() {
@@ -57,6 +74,7 @@ export default function CheckoutPage() {
         const response = await fetch('/api/payment-settings');
         if (response.ok) {
           const data = await response.json();
+          console.log('Checkout page received payment settings:', data.settings);
           setPaymentSettings(data.settings);
         }
       } catch (error) {
@@ -79,65 +97,161 @@ export default function CheckoutPage() {
     }
   }, [shippingAddress, sameAsShipping]);
 
+  // Auto-select payment method when settings are loaded
+  useEffect(() => {
+    if (paymentSettings && !paymentMethod) {
+      const enabledMethods = [];
+      if (paymentSettings.paypal_enabled !== false) enabledMethods.push('paypal');
+      if (paymentSettings.bank_transfer_enabled !== false) enabledMethods.push('bank_transfer');
+      if (paymentSettings.iban_enabled) enabledMethods.push('iban');
+      
+      if (enabledMethods.length === 1) {
+        setPaymentMethod(enabledMethods[0]);
+        console.log('Auto-selected payment method:', enabledMethods[0]);
+      } else if (enabledMethods.length > 1) {
+        // Default to first available method
+        setPaymentMethod(enabledMethods[0]);
+        console.log('Default selected payment method:', enabledMethods[0]);
+      }
+    }
+  }, [paymentSettings, paymentMethod]);
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!user) return;
+    
+    // Basic validation
+    if (!country.trim()) {
+      setError('Please select a country');
+      return;
+    }
+    if (!shippingAddress.trim()) {
+      setError('Please enter a shipping address');
+      return;
+    }
+    
+    if (!paymentMethod) {
+      setError('Please select a payment method');
+      return;
+    }
     
     setLoading(true);
     setError('');
     setSuccess('');
     
     try {
+      console.log('Form data before processing:', {
+        shippingAddress,
+        billingAddress,
+        sameAsShipping,
+        paymentMethod,
+        paymentPlan,
+        user: user?.id,
+        total,
+        paymentAmount
+      });
+
       // Parse addresses
       const shippingObj = parseAddress(shippingAddress);
       const billingObj = sameAsShipping ? shippingObj : parseAddress(billingAddress);
 
-      // Prepare order data
+      console.log('Parsed addresses:', { shippingObj, billingObj });
+
+      // Convert address objects to strings for database storage
+      const shippingAddressStr = `${shippingAddress}\n${country}`;
+      const billingAddressStr = sameAsShipping ? shippingAddressStr : `${billingAddress}\n${country}`;
+
+      // Calculate payment due date (7 days for half payment)
+      const paymentDueDate = paymentPlan === 'half' 
+        ? new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+        : null;
+
+      // Create the order
       const orderData = {
         user_id: user.id,
-        items: items,
         total_amount: total,
-        shipping_address: shippingObj,
-        billing_address: billingObj,
+        status: 'pending',
+        payment_status: 'pending',
         payment_method: paymentMethod,
         payment_plan: paymentPlan,
-        notes: `Payment plan: ${paymentPlan}. Payment method: ${paymentMethod}. Customer: ${user.email}`
+        amount_paid: 0,
+        remaining_amount: paymentAmount,
+        payment_due_date: paymentDueDate,
+        delivery_address: shippingAddressStr,
+        billing_address: billingAddressStr,
+        notes: `Payment plan: ${paymentPlan}. Payment method: ${paymentMethod}.`
       };
-
-      console.log('Submitting order:', orderData);
-
-      // Create the order using our API endpoint
-      const response = await fetch('/api/orders', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(orderData)
+      
+      console.log('Creating order with data:', orderData);
+      console.log('Billing Address Debug:', {
+        billingAddress,
+        shippingAddress,
+        sameAsShipping,
+        billingAddressStr,
+        country
       });
+      
+      const { data: order, error: orderError } = await supabase
+        .from('orders')
+        .insert(orderData)
+        .select()
+        .single();
 
-      const result = await response.json();
-
-      if (!response.ok) {
-        console.error('Order creation failed:', result);
-        
-        // Provide more specific error messages
-        if (result.error?.includes('Supabase')) {
-          throw new Error('Database configuration error. Please contact support.');
-        } else if (result.error?.includes('service_role')) {
-          throw new Error('Server configuration error. Please try again or contact support.');
-        } else {
-          throw new Error(result.error || 'Failed to create order. Please try again.');
-        }
+      if (orderError) {
+        console.error('Order creation error:', orderError);
+        console.error('Order data that failed:', orderData);
+        console.error('Error details:', {
+          message: orderError.message,
+          details: orderError.details,
+          hint: orderError.hint,
+          code: orderError.code
+        });
+        throw new Error(`Failed to create order: ${orderError.message || orderError.details || JSON.stringify(orderError)}`);
       }
 
-      console.log('Order created successfully:', result);
-      setSuccess(`Order #${result.order.id} placed successfully!`);
+      // Create order items
+      const orderItems = items.map(item => ({
+        order_id: order.id,
+        part_id: parseInt(item.id),
+        quantity: item.quantity,
+        price: item.price
+      }));
+
+      const { error: itemsError } = await supabase
+        .from('order_items')
+        .insert(orderItems);
+
+      if (itemsError) {
+        console.error('Order items creation error:', itemsError);
+        throw new Error(`Failed to create order items: ${itemsError.message}`);
+      }
+
+      // Create initial payment transaction (only if table exists)
+      try {
+        const { error: transactionError } = await supabase
+          .from('payment_transactions')
+          .insert({
+            order_id: order.id,
+            transaction_type: 'payment',
+            payment_method: paymentMethod,
+            amount: paymentAmount,
+            status: 'pending',
+            notes: `Initial ${paymentPlan} payment. ${paymentMethod === 'bank_transfer' ? 'Awaiting bank transfer.' : paymentMethod === 'iban' ? 'Awaiting IBAN transfer.' : 'PayPal payment pending.'}`
+          });
+
+        if (transactionError) {
+          console.error('Transaction creation error:', transactionError);
+        }
+      } catch (error) {
+        console.log('Payment transactions table not yet created - run migration script');
+      }
+
+      setSuccess(`Order #${order.id} placed successfully!`);
       clearCart();
       
       // Redirect to order confirmation with payment details
-      setTimeout(() => router.push(`/order-confirmation/${result.order.id}`), 3000);
+      setTimeout(() => router.push(`/order-confirmation/${order.id}`), 3000);
     } catch (err: any) {
-      console.error('Order submission error:', err);
       setError(err.message || 'Failed to place order. Please try again.');
     } finally {
       setLoading(false);
@@ -214,6 +328,20 @@ export default function CheckoutPage() {
                       disabled
                       className="w-full border rounded-md p-3 bg-gray-50 text-gray-600"
                     />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Country *</label>
+                    <select
+                      className="w-full border rounded-md p-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      value={country}
+                      onChange={e => setCountry(e.target.value)}
+                      required
+                    >
+                      <option value="">Select Country</option>
+                      {countries.map(countryName => (
+                        <option key={countryName} value={countryName}>{countryName}</option>
+                      ))}
+                    </select>
                   </div>
                   <div>
                     <label className="block text-sm font-medium mb-2">Shipping Address *</label>
@@ -327,42 +455,69 @@ export default function CheckoutPage() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <label className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${
-                      paymentMethod === 'paypal' ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300'
-                    }`}>
-                      <input
-                        type="radio"
-                        name="paymentMethod"
-                        value="paypal"
-                        checked={paymentMethod === 'paypal'}
-                        onChange={e => setPaymentMethod(e.target.value)}
-                        className="sr-only"
-                      />
-                      <div className="flex items-center gap-3 mb-2">
-                        <CreditCard className="w-6 h-6 text-blue-600" />
-                        <span className="font-medium">PayPal</span>
-                      </div>
-                      <p className="text-sm text-gray-600">Quick and secure payment</p>
-                    </label>
+                  <div className={`grid grid-cols-1 gap-4 ${
+                    [paymentSettings?.paypal_enabled, paymentSettings?.bank_transfer_enabled, paymentSettings?.iban_enabled].filter(Boolean).length === 3 ? 'md:grid-cols-3' :
+                    [paymentSettings?.paypal_enabled, paymentSettings?.bank_transfer_enabled, paymentSettings?.iban_enabled].filter(Boolean).length === 2 ? 'md:grid-cols-2' : 'md:grid-cols-1'
+                  }`}>
+                    {paymentSettings?.paypal_enabled !== false && (
+                      <label className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${
+                        paymentMethod === 'paypal' ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300'
+                      }`}>
+                        <input
+                          type="radio"
+                          name="paymentMethod"
+                          value="paypal"
+                          checked={paymentMethod === 'paypal'}
+                          onChange={e => setPaymentMethod(e.target.value)}
+                          className="sr-only"
+                        />
+                        <div className="flex items-center gap-3 mb-2">
+                          <CreditCard className="w-6 h-6 text-blue-600" />
+                          <span className="font-medium">PayPal</span>
+                        </div>
+                        <p className="text-sm text-gray-600">Quick and secure payment</p>
+                      </label>
+                    )}
 
-                    <label className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${
-                      paymentMethod === 'bank_transfer' ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300'
-                    }`}>
-                      <input
-                        type="radio"
-                        name="paymentMethod"
-                        value="bank_transfer"
-                        checked={paymentMethod === 'bank_transfer'}
-                        onChange={e => setPaymentMethod(e.target.value)}
-                        className="sr-only"
-                      />
-                      <div className="flex items-center gap-3 mb-2">
-                        <Building className="w-6 h-6 text-green-600" />
-                        <span className="font-medium">Bank Transfer</span>
-                      </div>
-                      <p className="text-sm text-gray-600">Direct bank payment</p>
-                    </label>
+                    {paymentSettings?.bank_transfer_enabled !== false && (
+                      <label className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${
+                        paymentMethod === 'bank_transfer' ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300'
+                      }`}>
+                        <input
+                          type="radio"
+                          name="paymentMethod"
+                          value="bank_transfer"
+                          checked={paymentMethod === 'bank_transfer'}
+                          onChange={e => setPaymentMethod(e.target.value)}
+                          className="sr-only"
+                        />
+                        <div className="flex items-center gap-3 mb-2">
+                          <Building className="w-6 h-6 text-green-600" />
+                          <span className="font-medium">Bank Transfer</span>
+                        </div>
+                        <p className="text-sm text-gray-600">Direct bank payment</p>
+                      </label>
+                    )}
+
+                    {paymentSettings?.iban_enabled && (
+                      <label className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${
+                        paymentMethod === 'iban' ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300'
+                      }`}>
+                        <input
+                          type="radio"
+                          name="paymentMethod"
+                          value="iban"
+                          checked={paymentMethod === 'iban'}
+                          onChange={e => setPaymentMethod(e.target.value)}
+                          className="sr-only"
+                        />
+                        <div className="flex items-center gap-3 mb-2">
+                          <Building className="w-6 h-6 text-purple-600" />
+                          <span className="font-medium">IBAN Transfer</span>
+                        </div>
+                        <p className="text-sm text-gray-600">International bank payment</p>
+                      </label>
+                    )}
                   </div>
 
                   {/* Payment Details */}
@@ -440,6 +595,61 @@ export default function CheckoutPage() {
                       )}
                     </div>
                   )}
+
+                  {paymentMethod === 'iban' && paymentSettings && (
+                    <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+                      <h4 className="font-medium text-purple-900 mb-3">IBAN Transfer Details</h4>
+                      <div className="grid grid-cols-1 gap-3 text-sm">
+                        <div className="flex justify-between items-center bg-white rounded p-2">
+                          <span><strong>Bank:</strong> {paymentSettings.bank_name}</span>
+                        </div>
+                        <div className="flex justify-between items-center bg-white rounded p-2">
+                          <span><strong>Account Name:</strong> {paymentSettings.account_holder_name}</span>
+                        </div>
+                        <div className="flex justify-between items-center bg-white rounded p-2">
+                          <span><strong>IBAN:</strong> {paymentSettings.iban || 'To be provided by admin'}</span>
+                          {paymentSettings.iban && (
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="outline"
+                              onClick={() => copyToClipboard(paymentSettings.iban, 'iban')}
+                            >
+                              {copiedField === 'iban' ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                            </Button>
+                          )}
+                        </div>
+                        {paymentSettings.swift_code && (
+                          <div className="flex justify-between items-center bg-white rounded p-2">
+                            <span><strong>SWIFT/BIC:</strong> {paymentSettings.swift_code}</span>
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="outline"
+                              onClick={() => copyToClipboard(paymentSettings.swift_code, 'swift_iban')}
+                            >
+                              {copiedField === 'swift_iban' ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                            </Button>
+                          </div>
+                        )}
+                        {paymentSettings.bank_address && (
+                          <div className="bg-white rounded p-2">
+                            <span><strong>Bank Address:</strong> {paymentSettings.bank_address}</span>
+                          </div>
+                        )}
+                      </div>
+                      <div className="mt-3 p-2 bg-purple-100 rounded text-xs text-purple-800">
+                        <Info className="w-4 h-4 inline mr-1" />
+                        Use IBAN for international transfers. Include your order number as reference.
+                      </div>
+                      {paymentSettings.payment_instructions && (
+                        <div className="mt-2 p-2 bg-purple-100 rounded text-xs text-purple-800">
+                          <Info className="w-4 h-4 inline mr-1" />
+                          {paymentSettings.payment_instructions}
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </CardContent>
               </Card>
 
@@ -449,22 +659,6 @@ export default function CheckoutPage() {
                     <div className="bg-red-50 border border-red-200 text-red-600 p-3 rounded flex items-center gap-2">
                       <AlertCircle className="w-5 h-5" />
                       {error}
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-
-              {/* Validation messages */}
-              {(!shippingAddress || !paymentMethod) && (
-                <Card>
-                  <CardContent className="p-4">
-                    <div className="bg-yellow-50 border border-yellow-200 text-yellow-700 p-3 rounded">
-                      <h4 className="font-medium mb-2">Please complete the following:</h4>
-                      <ul className="text-sm space-y-1">
-                        {!shippingAddress && <li>• Enter your shipping address</li>}
-                        {!paymentMethod && <li>• Select a payment method</li>}
-                        {items.length === 0 && <li>• Add items to your cart</li>}
-                      </ul>
                     </div>
                   </CardContent>
                 </Card>
@@ -495,14 +689,8 @@ export default function CheckoutPage() {
                       <span>{formatCurrency(subtotal)}</span>
                     </div>
                     <div className="flex justify-between text-sm">
-                      <span>Shipping</span>
-                      <span className={shipping_cost === 0 ? 'text-green-600' : ''}>
-                        {shipping_cost === 0 ? 'Free' : formatCurrency(shipping_cost)}
-                      </span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span>VAT (20%)</span>
-                      <span>{formatCurrency(tax)}</span>
+                      <span>Standard Shipping</span>
+                      <span>{formatCurrency(shipping_cost)}</span>
                     </div>
                     <div className="border-t pt-2 flex justify-between font-bold text-lg">
                       <span>Total</span>
@@ -523,24 +711,21 @@ export default function CheckoutPage() {
                     )}
                   </div>
                   
-              <Button
-                type="button"
-                onClick={handleSubmit}
-                disabled={loading || !shippingAddress || !paymentMethod || items.length === 0}
-                className="w-full"
-                size="lg"
-              >
-                {loading ? 'Processing Order...' : `Place Order - ${formatCurrency(paymentAmount)}`}
-              </Button>                  <div className="flex items-center gap-2 text-sm text-gray-600 bg-gray-50 p-3 rounded">
+                  <Button
+                    onClick={handleSubmit}
+                    disabled={loading || !shippingAddress || !country || !paymentMethod}
+                    className="w-full"
+                    size="lg"
+                  >
+                    {loading ? 'Processing...' : `Place Order - ${formatCurrency(paymentAmount)}`}
+                  </Button>
+                  
+                  <div className="flex items-center gap-2 text-sm text-gray-600 bg-gray-50 p-3 rounded">
                     <Lock className="w-4 h-4" />
                     <span>Secure checkout with 256-bit SSL encryption</span>
                   </div>
                   
-                  {subtotal < 50 && (
-                    <p className="text-sm text-gray-600 text-center">
-                      Add {formatCurrency(50 - subtotal)} more for free shipping!
-                    </p>
-                  )}
+
                 </div>
               </CardContent>
             </Card>

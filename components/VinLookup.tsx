@@ -54,10 +54,19 @@ export function VinLookup({ onVehicleSelect }: { onVehicleSelect?: (vehicle: Veh
         .eq('user_id', userId)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        // Handle case where table doesn't exist yet
+        if (error.code === 'PGRST205') {
+          console.warn('saved_vehicles table not found - VIN save feature disabled');
+          setSavedVehicles([]);
+          return;
+        }
+        throw error;
+      }
       setSavedVehicles(data || []);
     } catch (err) {
       console.error('Error loading saved vehicles:', err);
+      setSavedVehicles([]); // Set empty array to prevent further errors
     }
   }
 
@@ -149,7 +158,14 @@ export function VinLookup({ onVehicleSelect }: { onVehicleSelect?: (vehicle: Veh
           vehicle_info: vehicleInfo
         });
 
-      if (error) throw error;
+      if (error) {
+        // Handle case where table doesn't exist yet
+        if (error.code === 'PGRST205') {
+          setError('Vehicle save feature is currently unavailable. Please contact support.');
+          return;
+        }
+        throw error;
+      }
 
       setSuccess('Vehicle saved to your garage!');
       setShowSaveForm(false);
@@ -170,7 +186,14 @@ export function VinLookup({ onVehicleSelect }: { onVehicleSelect?: (vehicle: Veh
         .eq('id', id)
         .eq('user_id', user.id);
 
-      if (error) throw error;
+      if (error) {
+        // Handle case where table doesn't exist yet
+        if (error.code === 'PGRST205') {
+          setError('Vehicle delete feature is currently unavailable. Please contact support.');
+          return;
+        }
+        throw error;
+      }
 
       setSavedVehicles(prev => prev.filter(v => v.id !== id));
       setSuccess('Vehicle removed from garage');

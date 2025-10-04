@@ -15,7 +15,8 @@ export default function AdminPage() {
     totalProducts: 0,
     totalOrders: 0,
     totalRevenue: 0,
-    recentOrders: [] as any[]
+    recentOrders: [] as any[],
+    unreadMessages: 0
   })
   const [loading, setLoading] = useState(true)
 
@@ -27,6 +28,33 @@ export default function AdminPage() {
         if (response.ok) {
           const stats = await response.json();
           setStats(stats);
+        }
+        
+        // Load unread messages count
+        try {
+          const { data: messages, error } = await supabase
+            .from('support_messages')
+            .select('user_id, is_admin, created_at')
+            .order('created_at', { ascending: false });
+          
+          if (!error && messages) {
+            // Count unread messages (user messages that came after last admin message per user)
+            const userLastMessages = new Map();
+            let unread = 0;
+            
+            messages.forEach(msg => {
+              if (!userLastMessages.has(msg.user_id)) {
+                userLastMessages.set(msg.user_id, msg.is_admin);
+                if (!msg.is_admin) {
+                  unread++;
+                }
+              }
+            });
+            
+            setStats(prev => ({ ...prev, unreadMessages: unread }));
+          }
+        } catch (error) {
+          console.error('Error loading support messages:', error);
         }
       } catch (error) {
         console.error('Error loading dashboard data:', error)
@@ -139,7 +167,7 @@ export default function AdminPage() {
       </div>
       
       {/* Statistics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <div className="bg-white p-6 rounded-lg shadow border">
           <div className="flex items-center justify-between">
             <div>
@@ -190,6 +218,23 @@ export default function AdminPage() {
             </div>
           </div>
         </div>
+        
+        <Link href="/admin/chat" className="bg-white p-6 rounded-lg shadow border hover:shadow-lg transition-shadow">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-lg font-semibold text-gray-700 mb-1">Support</h3>
+              <p className="text-3xl font-bold text-orange-600">
+                {loading ? '...' : stats.unreadMessages}
+              </p>
+              <p className="text-sm text-gray-600">Unread Messages</p>
+            </div>
+            <div className="p-3 bg-orange-100 rounded-full">
+              <svg className="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-4l-4 4z" />
+              </svg>
+            </div>
+          </div>
+        </Link>
       </div>
       
       {/* Action Buttons and Recent Activity */}

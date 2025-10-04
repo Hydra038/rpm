@@ -38,16 +38,15 @@ function TrackContent() {
   const [trackingEvents, setTrackingEvents] = useState<TrackingEvent[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [hasSearched, setHasSearched] = useState(false);
 
-  // Auto-populate tracking number from URL
+  // Auto-populate tracking number from URL (but don't auto-search)
   useEffect(() => {
     const orderParam = searchParams.get('order');
     if (orderParam) {
       setTrackingNumber(orderParam);
-      // Auto-track if we have a parameter
-      setTimeout(() => {
-        handleTrackOrder(orderParam);
-      }, 100);
+      // Don't auto-search anymore - user must click "Track Order" button
+      // This ensures tracking history is hidden until user actively searches
     }
   }, [searchParams]);
 
@@ -119,6 +118,7 @@ function TrackContent() {
     setError('');
     setOrderData(null);
     setTrackingEvents([]);
+    setHasSearched(true);
 
     try {
       // Search by tracking number
@@ -206,10 +206,10 @@ function TrackContent() {
   };
 
   return (
-    <main className="container mx-auto p-3 sm:p-4 max-w-4xl">
-      <div className="mb-6 sm:mb-8">
-        <h1 className="text-2xl sm:text-3xl font-bold mb-2">Track Your Order</h1>
-        <p className="text-gray-600 text-sm sm:text-base">Enter your tracking number or order ID to see the latest updates</p>
+    <main className="container mx-auto p-4 max-w-4xl">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold mb-2">Track Your Order</h1>
+        <p className="text-gray-600">Enter your tracking number or order ID to see the latest updates</p>
       </div>
 
       {/* Tracking Input */}
@@ -221,21 +221,25 @@ function TrackContent() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-col sm:flex-row gap-4">
+          <div className="flex gap-4">
             <input
               type="text"
               placeholder="Enter tracking number or order ID (e.g., RPM123456789)"
               value={trackingNumber}
-              onChange={(e) => setTrackingNumber(e.target.value.toUpperCase())}
-              className="flex-1 border rounded-md px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[48px]"
+              onChange={(e) => {
+                setTrackingNumber(e.target.value.toUpperCase());
+                // Reset search state when input is cleared
+                if (e.target.value.trim() === '') {
+                  setHasSearched(false);
+                  setOrderData(null);
+                  setTrackingEvents([]);
+                  setError('');
+                }
+              }}
+              className="flex-1 border rounded-md px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
               onKeyDown={(e) => e.key === 'Enter' && handleTrackOrder()}
             />
-            <Button 
-              onClick={() => handleTrackOrder()} 
-              disabled={loading} 
-              className="px-6 py-3 text-base font-medium min-h-[48px] w-full sm:w-auto sm:px-8"
-              size="lg"
-            >
+            <Button onClick={() => handleTrackOrder()} disabled={loading} className="px-8">
               {loading ? 'Tracking...' : 'Track Order'}
             </Button>
           </div>
@@ -247,16 +251,49 @@ function TrackContent() {
         </CardContent>
       </Card>
 
-      {/* Order Information */}
-      {orderData && (
-        <div className="space-y-4 sm:space-y-6">
+      {/* No Results Message - Only show after search with no results */}
+      {hasSearched && !orderData && !loading && !error && (
+        <Card>
+          <CardContent className="p-8 text-center">
+            <Package className="w-16 h-16 mx-auto mb-4 text-gray-400" />
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">No Order Found</h3>
+            <p className="text-gray-600">
+              We couldn't find an order with that tracking number. Please check your tracking number and try again.
+            </p>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Initial State Message - Show when no search has been performed */}
+      {!hasSearched && !loading && (
+        <Card>
+          <CardContent className="p-12 text-center">
+            <div className="max-w-md mx-auto">
+              <Package className="w-20 h-20 mx-auto mb-6 text-gray-300" />
+              <h3 className="text-xl font-semibold text-gray-900 mb-3">Ready to Track Your Order?</h3>
+              <p className="text-gray-600 mb-6">
+                Enter your tracking number or order ID above to see real-time updates on your package delivery status.
+              </p>
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <p className="text-sm text-blue-800">
+                  <strong>Tip:</strong> Your tracking number starts with "RPM" followed by numbers (e.g., RPM123456789)
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Order Information - Only show after search */}
+      {hasSearched && orderData && (
+        <div className="space-y-6">
           {/* Order Summary */}
           <Card>
             <CardHeader>
               <CardTitle>Order Summary</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <div>
                   <p className="text-sm text-gray-600">Order ID</p>
                   <p className="font-semibold">{orderData.id}</p>
@@ -297,16 +334,16 @@ function TrackContent() {
             <CardContent>
               <div className="space-y-4">
                 {trackingEvents.map((event, index) => (
-                  <div key={index} className="flex gap-3 sm:gap-4">
-                    <div className={`flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 rounded-full border-2 flex items-center justify-center ${getStatusColor(event.status)}`}>
+                  <div key={index} className="flex gap-4">
+                    <div className={`flex-shrink-0 w-12 h-12 rounded-full border-2 flex items-center justify-center ${getStatusColor(event.status)}`}>
                       {getStatusIcon(event.status)}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-1 gap-1">
-                        <h4 className="font-semibold capitalize text-sm sm:text-base">
+                      <div className="flex items-center justify-between mb-1">
+                        <h4 className="font-semibold capitalize">
                           {event.status.replace('_', ' ')}
                         </h4>
-                        <span className="text-xs sm:text-sm text-gray-500 order-first sm:order-last">
+                        <span className="text-sm text-gray-500">
                           {new Date(event.timestamp).toLocaleDateString('en-GB')} at{' '}
                           {new Date(event.timestamp).toLocaleTimeString('en-GB', { 
                             hour: '2-digit', 
@@ -314,10 +351,10 @@ function TrackContent() {
                           })}
                         </span>
                       </div>
-                      <p className="text-gray-700 mb-1 text-sm sm:text-base leading-relaxed">{event.description}</p>
-                      <div className="flex items-center gap-1 text-xs sm:text-sm text-gray-500">
-                        <MapPin className="w-3 h-3 flex-shrink-0" />
-                        <span className="truncate">{event.location}</span>
+                      <p className="text-gray-700 mb-1">{event.description}</p>
+                      <div className="flex items-center gap-1 text-sm text-gray-500">
+                        <MapPin className="w-3 h-3" />
+                        {event.location}
                       </div>
                     </div>
                   </div>
@@ -334,8 +371,8 @@ function TrackContent() {
             <CardContent>
               <div className="space-y-4">
                 {orderData.order_items.map((item, index) => (
-                  <div key={index} className="flex items-center gap-3 sm:gap-4 p-3 border rounded-lg">
-                    <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <div key={index} className="flex items-center gap-4 p-3 border rounded-lg">
+                    <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center">
                       {item.parts.image_url ? (
                         <img 
                           src={item.parts.image_url} 
@@ -343,12 +380,12 @@ function TrackContent() {
                           className="w-full h-full object-cover rounded-lg"
                         />
                       ) : (
-                        <Package className="w-4 h-4 sm:w-6 sm:h-6 text-gray-400" />
+                        <Package className="w-6 h-6 text-gray-400" />
                       )}
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <h4 className="font-semibold text-sm sm:text-base truncate">{item.parts.name}</h4>
-                      <p className="text-xs sm:text-sm text-gray-600">Quantity: {item.quantity}</p>
+                    <div className="flex-1">
+                      <h4 className="font-semibold">{item.parts.name}</h4>
+                      <p className="text-sm text-gray-600">Quantity: {item.quantity}</p>
                     </div>
                   </div>
                 ))}
@@ -366,14 +403,14 @@ function TrackContent() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="bg-gray-50 p-3 sm:p-4 rounded-lg">
-                  <p className="text-sm sm:text-base leading-relaxed">{orderData.shipping_address.address_line1}</p>
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <p>{orderData.shipping_address.address_line1}</p>
                   {orderData.shipping_address.address_line2 && (
-                    <p className="text-sm sm:text-base leading-relaxed">{orderData.shipping_address.address_line2}</p>
+                    <p>{orderData.shipping_address.address_line2}</p>
                   )}
-                  <p className="text-sm sm:text-base leading-relaxed">{orderData.shipping_address.city}</p>
-                  <p className="text-sm sm:text-base leading-relaxed font-medium">{orderData.shipping_address.postcode}</p>
-                  <p className="text-sm sm:text-base leading-relaxed text-gray-600">{orderData.shipping_address.country}</p>
+                  <p>{orderData.shipping_address.city}</p>
+                  <p>{orderData.shipping_address.postcode}</p>
+                  <p>{orderData.shipping_address.country}</p>
                 </div>
               </CardContent>
             </Card>
@@ -385,19 +422,31 @@ function TrackContent() {
               <CardTitle>Need Help?</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                <div className="flex items-center gap-3 p-3 sm:p-4 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors">
-                  <Phone className="w-5 h-5 text-blue-600 flex-shrink-0" />
-                  <div className="min-w-0">
-                    <p className="font-semibold text-blue-900 text-sm sm:text-base">Call Us</p>
-                    <p className="text-blue-700 text-sm font-medium">0800 123 4567</p>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="flex items-center gap-3 p-4 bg-blue-50 rounded-lg">
+                  <Phone className="w-5 h-5 text-blue-600" />
+                  <div>
+                    <p className="font-semibold text-blue-900">WhatsApp Only</p>
+                    <p className="text-blue-700">+44 7723832186</p>
+                    <p className="text-xs text-blue-600">WhatsApp messages only</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-3 p-3 sm:p-4 bg-green-50 rounded-lg hover:bg-green-100 transition-colors">
-                  <Mail className="w-5 h-5 text-green-600 flex-shrink-0" />
-                  <div className="min-w-0">
-                    <p className="font-semibold text-green-900 text-sm sm:text-base">Email Support</p>
-                    <p className="text-green-700 text-sm break-all font-medium">support@rpm-parts.com</p>
+                <div className="flex items-center gap-3 p-4 bg-green-50 rounded-lg">
+                  <Mail className="w-5 h-5 text-green-600" />
+                  <div>
+                    <p className="font-semibold text-green-900">Email Support</p>
+                    <p className="text-green-700">support@rpmgenuineautoparts.info</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 p-4 bg-purple-50 rounded-lg">
+                  <svg className="w-5 h-5 text-purple-600" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                  </svg>
+                  <div>
+                    <p className="font-semibold text-purple-900">Facebook</p>
+                    <a href="https://web.facebook.com/profile.php?id=61563129454615" target="_blank" rel="noopener noreferrer" className="text-purple-700 hover:underline">
+                      Visit our page
+                    </a>
                   </div>
                 </div>
               </div>

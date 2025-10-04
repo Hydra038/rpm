@@ -74,7 +74,7 @@ export default function HomePage() {
               </CardHeader>
               <CardContent>
                 <p className="text-gray-600">
-                  Free shipping on orders over $50. Express delivery available nationwide.
+                  Fast and reliable delivery available nationwide.
                 </p>
               </CardContent>
             </Card>

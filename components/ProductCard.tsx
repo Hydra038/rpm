@@ -13,7 +13,7 @@ type ProductCardProps = {
   price: number;
   image_url?: string;
   category?: string;
-  stock_quantity?: number;
+  stock?: number;
   rating?: number;
   isOnSale?: boolean;
   originalPrice?: number;
@@ -25,7 +25,7 @@ export function ProductCard({
   price, 
   image_url, 
   category, 
-  stock_quantity, 
+  stock, 
   rating, 
   isOnSale, 
   originalPrice 
@@ -127,12 +127,12 @@ export function ProductCard({
                 Sale
               </span>
             )}
-            {stock_quantity !== undefined && stock_quantity < 5 && stock_quantity > 0 && (
+            {stock !== undefined && stock < 5 && stock > 0 && (
               <span className="bg-orange-500 text-white text-xs px-2 py-1 rounded-full font-medium shadow-sm">
                 Low Stock
               </span>
             )}
-            {stock_quantity === 0 && (
+            {stock === 0 && (
               <span className="bg-gray-500 text-white text-xs px-2 py-1 rounded-full font-medium shadow-sm">
                 Out of Stock
               </span>
@@ -222,14 +222,14 @@ export function ProductCard({
           </div>
           
           {/* Stock Status */}
-          {stock_quantity !== undefined && (
+          {stock !== undefined && (
             <div className="text-xs text-gray-600 mb-3">
-              {stock_quantity > 0 ? (
+              {stock > 0 ? (
                 <>
-                  {stock_quantity < 5 ? (
-                    <span className="text-orange-600">Only {stock_quantity} left in stock</span>
+                  {stock < 5 ? (
+                    <span className="text-orange-600">Only {stock} left in stock</span>
                   ) : (
-                    <span className="text-green-600">In Stock ({stock_quantity} available)</span>
+                    <span className="text-green-600">In Stock ({stock} available)</span>
                   )}
                 </>
               ) : (
@@ -241,13 +241,13 @@ export function ProductCard({
           {/* Add to Cart Button */}
           <Button
             onClick={handleAddToCart}
-            disabled={stock_quantity === 0 || addingToCart}
+            disabled={stock === 0 || addingToCart}
             className="w-full gap-2 h-9 sm:h-10 text-sm font-medium"
             size="sm"
           >
             <ShoppingCart className="w-4 h-4" />
-            <span className="sm:hidden">{addingToCart ? 'Adding...' : stock_quantity === 0 ? 'Out of Stock' : 'Add to Cart'}</span>
-            <span className="hidden sm:inline">{addingToCart ? 'Adding...' : stock_quantity === 0 ? 'Out of Stock' : 'Add to Cart'}</span>
+            <span className="sm:hidden">{addingToCart ? 'Adding...' : stock === 0 ? 'Out of Stock' : 'Add to Cart'}</span>
+            <span className="hidden sm:inline">{addingToCart ? 'Adding...' : stock === 0 ? 'Out of Stock' : 'Add to Cart'}</span>
           </Button>
         </div>
       </CardContent>

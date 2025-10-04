@@ -99,13 +99,12 @@ function generateInvoiceResponse(orderData: any, orderId: string) {
     const subtotal = orderData.order_items.reduce((sum: number, item: any) => 
       sum + (item.quantity * item.price), 0
     );
-    const tax = subtotal * 0.20; // 20% VAT
-    const total = subtotal + tax;
+    const total = subtotal; // No VAT
     
     // Payment plan information
     const paymentPlan = orderData.payment_plan || 'full';
-    const amountPaid = orderData.amount_paid || 0;
-    const remainingAmount = orderData.remaining_amount || 0;
+    const amountPaid = total; // Show full amount as paid
+    const remainingAmount = 0; // No remaining amount
 
     console.log('Invoice totals:', { subtotal, tax, total, paymentPlan, amountPaid });
 
@@ -270,7 +269,7 @@ function generateCustomerInvoiceHTML(orderData: any, subtotal: number, tax: numb
                 <p>123 Auto Parts Lane</p>
                 <p>Manchester, M1 1AA</p>
                 <p>United Kingdom</p>
-                <p>Phone: +44 161 123 4567</p>
+                <p>WhatsApp: +44 7723832186</p>
                 <p>Email: support@rpmgenuineautoparts.info</p>
             </div>
             <div class="invoice-info">
@@ -291,21 +290,15 @@ function generateCustomerInvoiceHTML(orderData: any, subtotal: number, tax: numb
                 
                 ${orderData.billing_address ? `
                     <div style="margin-top: 15px;">
-                        <p>${orderData.billing_address.address_line1}</p>
-                        ${orderData.billing_address.address_line2 ? `<p>${orderData.billing_address.address_line2}</p>` : ''}
-                        <p>${orderData.billing_address.city}, ${orderData.billing_address.postcode}</p>
-                        <p>${orderData.billing_address.country}</p>
+                        <p style="white-space: pre-line;">${orderData.billing_address}</p>
                     </div>
                 ` : ''}
             </div>
             
             <div class="billing-info">
                 <h3>Ship To:</h3>
-                ${orderData.shipping_address ? `
-                    <p>${orderData.shipping_address.address_line1}</p>
-                    ${orderData.shipping_address.address_line2 ? `<p>${orderData.shipping_address.address_line2}</p>` : ''}
-                    <p>${orderData.shipping_address.city}, ${orderData.shipping_address.postcode}</p>
-                    <p>${orderData.shipping_address.country}</p>
+                ${orderData.delivery_address ? `
+                    <p style="white-space: pre-line;">${orderData.delivery_address}</p>
                 ` : '<p>Same as billing address</p>'}
                 
                 ${orderData.tracking_number ? `
@@ -330,10 +323,10 @@ function generateCustomerInvoiceHTML(orderData: any, subtotal: number, tax: numb
                 ${orderData.order_items.map((item: any) => `
                     <tr>
                         <td>
-                            <strong>${item.parts.name}</strong>
-                            ${item.parts.description ? `<br><small style="color: #666;">${item.parts.description}</small>` : ''}
+                            <strong>${item.product_name}</strong>
+                            ${item.description ? `<br><small style="color: #666;">${item.description}</small>` : ''}
                         </td>
-                        <td>${item.parts.category}</td>
+                        <td>${item.category}</td>
                         <td>${item.quantity}</td>
                         <td>${formatCurrency(item.price)}</td>
                         <td>${formatCurrency(item.quantity * item.price)}</td>
@@ -343,14 +336,6 @@ function generateCustomerInvoiceHTML(orderData: any, subtotal: number, tax: numb
         </table>
 
         <div class="totals">
-            <div class="totals-row">
-                <span>Subtotal:</span>
-                <span>${formatCurrency(subtotal)}</span>
-            </div>
-            <div class="totals-row">
-                <span>VAT (20%):</span>
-                <span>${formatCurrency(tax)}</span>
-            </div>
             <div class="totals-row total">
                 <span>Total:</span>
                 <span>${formatCurrency(total)}</span>
@@ -380,8 +365,8 @@ function generateCustomerInvoiceHTML(orderData: any, subtotal: number, tax: numb
 
         <div class="footer">
             <p>Thank you for your business!</p>
+            <p>Contact us: WhatsApp: +44 7723832186 | Email: support@rpmgenuineautoparts.info | Facebook: <a href="https://web.facebook.com/profile.php?id=61563129454615" target="_blank">RPM Genuine Auto Parts</a></p>
             <p>This invoice was generated on ${formatDate(new Date().toISOString())}</p>
-            <p>For support, contact us at support@rpmgenuineautoparts.info</p>
         </div>
     </body>
     </html>
