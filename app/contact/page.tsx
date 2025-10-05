@@ -22,13 +22,13 @@ interface Message {
   user_email?: string;
 }
 
-interface User {
+interface ChatUser {
   id: string;
   email: string;
 }
 
 export default function ContactPage() {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<ChatUser | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [loading, setLoading] = useState(false);
@@ -53,7 +53,10 @@ export default function ContactPage() {
   const initializeUser = async () => {
     const result = await getUser();
     if (result.user) {
-      setUser(result.user);
+      setUser({
+        id: result.user.id,
+        email: result.user.email || ''
+      });
     }
   };
 

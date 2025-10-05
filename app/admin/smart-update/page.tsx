@@ -7,7 +7,7 @@ import { Card } from '@/components/ui/card';
 export default function SmartImageUpdatePage() {
   const [isUpdating, setIsUpdating] = useState(false);
   const [results, setResults] = useState(null);
-  const [auditData, setAuditData] = useState(null);
+  const [auditData, setAuditData] = useState<any>(null);
 
   const runAudit = async () => {
     try {
@@ -83,18 +83,21 @@ export default function SmartImageUpdatePage() {
 
             <h3 className="text-lg font-semibold mb-3">Category Breakdown</h3>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-              {Object.entries(auditData.categoryBreakdown).map(([category, info]) => (
-                <div key={category} className="border rounded p-3">
-                  <div className="font-semibold capitalize">{category}</div>
-                  <div className="text-sm text-gray-600">
-                    {info.filesAdded} images added
+              {Object.entries(auditData.categoryBreakdown).map(([category, info]) => {
+                const categoryInfo = info as { filesAdded: number; files: string[] };
+                return (
+                  <div key={category} className="border rounded p-3">
+                    <div className="font-semibold capitalize">{category}</div>
+                    <div className="text-sm text-gray-600">
+                      {categoryInfo.filesAdded} images added
+                    </div>
+                    <div className="text-xs text-gray-500 mt-1">
+                      {categoryInfo.files.slice(0, 3).join(', ')}
+                      {categoryInfo.files.length > 3 && '...'}
+                    </div>
                   </div>
-                  <div className="text-xs text-gray-500 mt-1">
-                    {info.files.slice(0, 3).join(', ')}
-                    {info.files.length > 3 && '...'}
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </Card>
         )}

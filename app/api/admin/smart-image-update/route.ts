@@ -1,9 +1,23 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-const supabase = createClient(supabaseUrl, supabaseServiceKey);
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+
+// Disable static optimization for this route
+export const dynamic = 'force-dynamic';
+
+let supabase: any;
+
+function getSupabaseClient() {
+  if (!supabase) {
+    if (!supabaseUrl || !supabaseServiceKey) {
+      throw new Error('Missing Supabase environment variables');
+    }
+    supabase = createClient(supabaseUrl, supabaseServiceKey);
+  }
+  return supabase;
+}
 
 export async function GET() {
   return NextResponse.json({ message: 'Smart update endpoint is ready', method: 'Use POST to execute' });
@@ -95,6 +109,7 @@ export async function POST() {
 
     for (const update of updates) {
       try {
+        const supabase = getSupabaseClient();
         const { data, error } = await supabase
           .from('parts')
           .update({ image_url: update.newUrl })

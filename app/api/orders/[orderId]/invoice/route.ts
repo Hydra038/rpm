@@ -99,6 +99,7 @@ function generateInvoiceResponse(orderData: any, orderId: string) {
     const subtotal = orderData.order_items.reduce((sum: number, item: any) => 
       sum + (item.quantity * item.price), 0
     );
+    const tax = 0; // No VAT
     const total = subtotal; // No VAT
     
     // Payment plan information
