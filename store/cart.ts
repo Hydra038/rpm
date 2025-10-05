@@ -15,22 +15,30 @@ interface CartState {
   removeFromCart: (id: string) => void;
   updateQuantity: (id: string, quantity: number) => void;
   clearCart: () => void;
+  validateCart: () => void;
 }
 
 export const useCartStore = create<CartState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       items: [],
       addToCart: (item) => set((state) => {
-        const existing = state.items.find((i) => i.id === item.id);
+        // Validate item ID before adding
+        const id = item.id?.toString();
+        if (!id || isNaN(parseInt(id)) || parseInt(id) <= 0) {
+          console.error('Invalid item ID:', item.id);
+          return state; // Don't add invalid items
+        }
+
+        const existing = state.items.find((i) => i.id === id);
         if (existing) {
           return {
             items: state.items.map((i) =>
-              i.id === item.id ? { ...i, quantity: i.quantity + item.quantity } : i
+              i.id === id ? { ...i, quantity: i.quantity + item.quantity } : i
             ),
           };
         }
-        return { items: [...state.items, item] };
+        return { items: [...state.items, { ...item, id }] };
       }),
       removeFromCart: (id) => set((state) => ({
         items: state.items.filter((i) => i.id !== id),
@@ -41,6 +49,12 @@ export const useCartStore = create<CartState>()(
         ),
       })),
       clearCart: () => set({ items: [] }),
+      validateCart: () => set((state) => ({
+        items: state.items.filter((item) => {
+          const id = parseInt(item.id);
+          return !isNaN(id) && id > 0 && item.quantity > 0 && item.price >= 0;
+        })
+      })),
     }),
     {
       name: 'rpm-cart-storage', // unique name for localStorage key

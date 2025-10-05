@@ -133,11 +133,11 @@ RETURNS TRIGGER AS $$
 DECLARE
   order_total DECIMAL;
   total_paid DECIMAL;
-  payment_plan VARCHAR;
+  order_payment_plan VARCHAR;
   required_amount DECIMAL;
 BEGIN
   -- Get order details
-  SELECT total_amount, payment_plan INTO order_total, payment_plan
+  SELECT total_amount, payment_plan INTO order_total, order_payment_plan
   FROM orders WHERE id = NEW.order_id;
   
   -- Calculate total amount paid for this order
@@ -148,7 +148,7 @@ BEGIN
   AND transaction_type = 'payment';
   
   -- Determine required amount based on payment plan
-  IF payment_plan = 'half' THEN
+  IF order_payment_plan = 'half' THEN
     required_amount := order_total / 2;
   ELSE
     required_amount := order_total;
@@ -157,7 +157,7 @@ BEGIN
   -- Update order payment status and amounts
   UPDATE orders SET
     amount_paid = total_paid,
-    remaining_amount = calculate_remaining_amount(order_total, total_paid, payment_plan),
+    remaining_amount = calculate_remaining_amount(order_total, total_paid, order_payment_plan),
     payment_status = CASE
       WHEN total_paid >= order_total THEN 'paid'
       WHEN total_paid >= required_amount THEN 'partially_paid'

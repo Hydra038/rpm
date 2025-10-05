@@ -149,35 +149,35 @@ export default function ContactPage() {
   };
 
   return (
-    <main className="container mx-auto p-4 space-y-8">
+    <main className="container mx-auto px-2 sm:px-4 py-4 space-y-6 sm:space-y-8">
       <div className="max-w-4xl mx-auto">
-        <h1 className="text-3xl font-bold mb-8">Contact Us</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8 text-center sm:text-left">Contact Us</h1>
         
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8">
           {/* Contact Information */}
-          <div className="space-y-6">
+          <div className="space-y-4 sm:space-y-6">
             <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Phone className="w-5 h-5" />
+              <CardHeader className="pb-3 sm:pb-6">
+                <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
+                  <Phone className="w-4 h-4 sm:w-5 sm:h-5" />
                   Get in Touch
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg">
-                  <Phone className="w-5 h-5 text-blue-600" />
-                  <div>
-                    <p className="font-semibold text-blue-900">WhatsApp</p>
-                    <p className="text-blue-700">+44 7723832186</p>
+              <CardContent className="space-y-3 sm:space-y-4 p-3 sm:p-6">
+                <div className="flex items-start gap-3 p-3 bg-blue-50 rounded-lg">
+                  <Phone className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600 mt-0.5" />
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-blue-900 text-sm sm:text-base">WhatsApp</p>
+                    <p className="text-blue-700 text-sm break-all">+44 7723832186</p>
                     <p className="text-xs text-blue-600">WhatsApp messages only</p>
                   </div>
                 </div>
                 
-                <div className="flex items-center gap-3 p-3 bg-green-50 rounded-lg">
-                  <Mail className="w-5 h-5 text-green-600" />
-                  <div>
-                    <p className="font-semibold text-green-900">Email Support</p>
-                    <p className="text-green-700">support@rpmgenuineautoparts.info</p>
+                <div className="flex items-start gap-3 p-3 bg-green-50 rounded-lg">
+                  <Mail className="w-4 h-4 sm:w-5 sm:h-5 text-green-600 mt-0.5" />
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-green-900 text-sm sm:text-base">Email Support</p>
+                    <p className="text-green-700 text-sm break-all">support@rpmgenuineautoparts.info</p>
                   </div>
                 </div>
                 

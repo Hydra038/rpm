@@ -6,6 +6,7 @@ import { Minus, Plus, Trash2, ShoppingCart, Heart, Truck, Shield, CreditCard, Ar
 import { formatCurrency } from '../../lib/currency';
 import { ProductRecommendations } from '../../components/ProductRecommendations';
 import Link from 'next/link';
+import { NavigationLink } from '@/components/NavigationLink';
 
 export default function CartPage() {
   const { items, updateQuantity, removeFromCart, clearCart } = useCartStore();
@@ -187,7 +188,7 @@ export default function CartPage() {
                 </div>
                 
                 <Button asChild className="w-full mb-4" size="lg">
-                  <Link href="/checkout">Proceed to Checkout</Link>
+                  <NavigationLink href="/checkout">Proceed to Checkout</NavigationLink>
                 </Button>
                 
                 {/* Trust indicators */}

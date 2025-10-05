@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
+import { useNavigationStore } from '../store/navigation';
+import { LoadingSpinner } from './LoadingSpinner';
 
 interface CartDrawerProps {
   isOpen: boolean;
@@ -14,14 +16,18 @@ interface CartDrawerProps {
 
 export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
   const { items, removeFromCart, clearCart, updateQuantity } = useCartStore();
+  const { setNavigating, isNavigating } = useNavigationStore();
   const router = useRouter();
 
   const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const itemCount = items.reduce((sum, item) => sum + item.quantity, 0);
 
   const handleCheckout = () => {
+    setNavigating(true);
     onClose();
     router.push('/checkout');
+    // Clear loading after timeout
+    setTimeout(() => setNavigating(false), 5000);
   };
 
   const handleViewCart = () => {
@@ -156,9 +162,19 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                 onClick={handleCheckout}
                 className="w-full flex items-center justify-center gap-2"
                 size="lg"
+                disabled={isNavigating}
               >
-                Checkout
-                <ArrowRight className="w-4 h-4" />
+                {isNavigating ? (
+                  <>
+                    <LoadingSpinner size="sm" />
+                    Loading...
+                  </>
+                ) : (
+                  <>
+                    Checkout
+                    <ArrowRight className="w-4 h-4" />
+                  </>
+                )}
               </Button>
               
               <div className="flex gap-2">

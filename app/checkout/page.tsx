@@ -25,7 +25,7 @@ interface PaymentSettings {
 }
 
 export default function CheckoutPage() {
-  const { items, clearCart } = useCartStore();
+  const { items, clearCart, validateCart } = useCartStore();
   const [user, setUser] = useState<any>(null);
   const [paymentSettings, setPaymentSettings] = useState<PaymentSettings | null>(null);
   const [billingAddress, setBillingAddress] = useState('');
@@ -120,6 +120,15 @@ export default function CheckoutPage() {
     e.preventDefault();
     if (!user) return;
     
+    // Validate cart before proceeding
+    validateCart();
+    
+    // Re-check items after validation
+    if (items.length === 0) {
+      setError('Your cart is empty or contains invalid items. Please add products to your cart.');
+      return;
+    }
+    
     // Basic validation
     if (!country.trim()) {
       setError('Please select a country');
@@ -209,13 +218,41 @@ export default function CheckoutPage() {
         throw new Error(`Failed to create order: ${orderError.message || orderError.details || JSON.stringify(orderError)}`);
       }
 
-      // Create order items
-      const orderItems = items.map(item => ({
-        order_id: order.id,
-        part_id: parseInt(item.id),
-        quantity: item.quantity,
-        price: item.price
-      }));
+      // Create order items with validation
+      const orderItems = items.map(item => {
+        const partId = parseInt(item.id);
+        if (isNaN(partId) || partId <= 0) {
+          throw new Error(`Invalid part ID: ${item.id} for item: ${item.name}`);
+        }
+        return {
+          order_id: order.id,
+          part_id: partId,
+          quantity: item.quantity,
+          price: item.price
+        };
+      });
+
+      console.log('Creating order items:', orderItems);
+
+      // Validate that all parts exist before inserting order items
+      const partIds = orderItems.map(item => item.part_id);
+      const { data: existingParts, error: partsCheckError } = await supabase
+        .from('parts')
+        .select('id')
+        .in('id', partIds);
+
+      if (partsCheckError) {
+        console.error('Parts validation error:', partsCheckError);
+        throw new Error(`Failed to validate parts: ${partsCheckError.message}`);
+      }
+
+      const existingPartIds = existingParts?.map(p => p.id) || [];
+      const missingPartIds = partIds.filter(id => !existingPartIds.includes(id));
+
+      if (missingPartIds.length > 0) {
+        console.error('Missing parts:', missingPartIds);
+        throw new Error(`Some products are no longer available. Please refresh your cart and try again. Missing part IDs: ${missingPartIds.join(', ')}`);
+      }
 
       const { error: itemsError } = await supabase
         .from('order_items')
@@ -223,6 +260,7 @@ export default function CheckoutPage() {
 
       if (itemsError) {
         console.error('Order items creation error:', itemsError);
+        console.error('Order items data:', orderItems);
         throw new Error(`Failed to create order items: ${itemsError.message}`);
       }
 
@@ -304,35 +342,35 @@ export default function CheckoutPage() {
   }
 
   return (
-    <main className="container mx-auto p-4">
+    <main className="container mx-auto px-2 sm:px-4 py-4">
       <div className="max-w-6xl mx-auto">
-        <h1 className="text-3xl font-bold mb-8">Secure Checkout</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8 text-center sm:text-left">Secure Checkout</h1>
         
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2 space-y-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
+          <div className="lg:col-span-2 space-y-4 sm:space-y-6">
             <form onSubmit={handleSubmit}>
               {/* Shipping Information */}
               <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Truck className="w-5 h-5" />
+                <CardHeader className="pb-3 sm:pb-6">
+                  <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
+                    <Truck className="w-4 h-4 sm:w-5 sm:h-5" />
                     Shipping Information
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4">
+                <CardContent className="space-y-3 sm:space-y-4 p-3 sm:p-6">
                   <div>
-                    <label className="block text-sm font-medium mb-2">Email</label>
+                    <label className="block text-xs sm:text-sm font-medium mb-1 sm:mb-2 text-gray-700">Email</label>
                     <input
                       type="email"
                       value={user?.email || ''}
                       disabled
-                      className="w-full border rounded-md p-3 bg-gray-50 text-gray-600"
+                      className="w-full border rounded-lg px-3 py-2.5 text-sm bg-gray-50 text-gray-600"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-2">Country *</label>
+                    <label className="block text-xs sm:text-sm font-medium mb-1 sm:mb-2 text-gray-700">Country *</label>
                     <select
-                      className="w-full border rounded-md p-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full border rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                       value={country}
                       onChange={e => setCountry(e.target.value)}
                       required
@@ -344,14 +382,14 @@ export default function CheckoutPage() {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-2">Shipping Address *</label>
+                    <label className="block text-xs sm:text-sm font-medium mb-1 sm:mb-2 text-gray-700">Shipping Address *</label>
                     <textarea
-                      className="w-full border rounded-md p-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full border rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                       placeholder="Street Address&#10;City&#10;Postal Code"
                       value={shippingAddress}
                       onChange={e => setShippingAddress(e.target.value)}
                       required
-                      rows={4}
+                      rows={3}
                     />
                   </div>
                 </CardContent>

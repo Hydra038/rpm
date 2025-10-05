@@ -9,6 +9,7 @@ import { getUser, signOut } from '../lib/supabase/auth';
 import { supabase } from '../lib/supabase/client';
 import { CartDrawer } from './CartDrawer';
 import { WishlistDrawer } from './WishlistDrawer';
+import { NavigationLink } from './NavigationLink';
 
 export function Navigation() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -77,54 +78,54 @@ export function Navigation() {
   return (
     <nav className="fixed top-0 w-full bg-white border-b border-gray-200 z-50">
       <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between h-16">
+        <div className="flex items-center justify-between h-16 px-2 sm:px-0">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2 font-bold text-xl text-blue-600">
-            <Car className="w-8 h-8" />
+          <Link href="/" className="flex items-center gap-2 font-bold text-lg sm:text-xl text-blue-600">
+            <Car className="w-6 h-6 sm:w-8 sm:h-8" />
             RPM
           </Link>
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-6">
-            <Link href="/" className="hover:text-blue-600 transition-colors">
+            <NavigationLink href="/" className="hover:text-blue-600 transition-colors">
               Home
-            </Link>
-            <Link href="/products" className="hover:text-blue-600 transition-colors">
+            </NavigationLink>
+            <NavigationLink href="/products" className="hover:text-blue-600 transition-colors">
               Products
-            </Link>
-            <Link href="/track" className="hover:text-blue-600 transition-colors flex items-center gap-1">
+            </NavigationLink>
+            <NavigationLink href="/track" className="hover:text-blue-600 transition-colors flex items-center gap-1">
               <Truck className="w-4 h-4" />
               Track Order
-            </Link>
-            <Link href="/contact" className="hover:text-blue-600 transition-colors">
+            </NavigationLink>
+            <NavigationLink href="/contact" className="hover:text-blue-600 transition-colors">
               Contact
-            </Link>
+            </NavigationLink>
             {user && (
               <>
-                <Link href="/account" className="hover:text-blue-600 transition-colors">
+                <NavigationLink href="/account" className="hover:text-blue-600 transition-colors">
                   Account
-                </Link>
+                </NavigationLink>
                 {profile?.role === 'admin' && (
-                  <Link href="/admin" className="hover:text-red-600 transition-colors flex items-center gap-1">
+                  <NavigationLink href="/admin" className="hover:text-red-600 transition-colors flex items-center gap-1">
                     <Shield className="w-4 h-4" />
                     Admin
-                  </Link>
+                  </NavigationLink>
                 )}
               </>
             )}
           </div>
 
           {/* Right Side Actions */}
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 sm:gap-4">
             {/* Wishlist */}
             {user && (
               <Button 
                 variant="ghost" 
                 size="sm" 
-                className="relative"
+                className="relative p-2"
                 onClick={() => setIsWishlistOpen(true)}
               >
-                <Heart className="w-5 h-5" />
+                <Heart className="w-4 h-4 sm:w-5 sm:h-5" />
               </Button>
             )}
 
@@ -132,12 +133,12 @@ export function Navigation() {
             <Button 
               variant="ghost" 
               size="sm" 
-              className="relative"
+              className="relative p-2"
               onClick={() => setIsCartOpen(true)}
             >
-              <ShoppingCart className="w-5 h-5" />
+              <ShoppingCart className="w-4 h-4 sm:w-5 sm:h-5" />
               {cartItemCount > 0 && (
-                <span className="absolute -top-2 -right-2 bg-blue-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                <span className="absolute -top-1 -right-1 sm:-top-2 sm:-right-2 bg-blue-600 text-white text-xs rounded-full w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center text-[10px] sm:text-xs">
                   {cartItemCount}
                 </span>
               )}
@@ -188,38 +189,38 @@ export function Navigation() {
         {isMenuOpen && (
           <div className="md:hidden border-t border-gray-200 py-4">
             <div className="flex flex-col gap-2">
-              <Link
+              <NavigationLink
                 href="/"
                 className="px-4 py-2 hover:bg-gray-50 rounded"
                 onClick={() => setIsMenuOpen(false)}
               >
                 Home
-              </Link>
-              <Link
+              </NavigationLink>
+              <NavigationLink
                 href="/products"
                 className="px-4 py-2 hover:bg-gray-50 rounded"
                 onClick={() => setIsMenuOpen(false)}
               >
                 Products
-              </Link>
-              <Link
+              </NavigationLink>
+              <NavigationLink
                 href="/track"
                 className="px-4 py-2 hover:bg-gray-50 rounded flex items-center gap-2"
                 onClick={() => setIsMenuOpen(false)}
               >
                 <Truck className="w-4 h-4" />
                 Track Order
-              </Link>
-              <Link
+              </NavigationLink>
+              <NavigationLink
                 href="/contact"
                 className="px-4 py-2 hover:bg-gray-50 rounded"
                 onClick={() => setIsMenuOpen(false)}
               >
                 Contact
-              </Link>
+              </NavigationLink>
               {user ? (
                 <>
-                  <Link
+                  <NavigationLink
                     href="/account"
                     className="px-4 py-2 hover:bg-gray-50 rounded flex items-center gap-2"
                     onClick={() => setIsMenuOpen(false)}
@@ -228,16 +229,16 @@ export function Navigation() {
                     {profile?.role === 'admin' && (
                       <Shield className="w-4 h-4 text-red-600" />
                     )}
-                  </Link>
+                  </NavigationLink>
                   {profile?.role === 'admin' && (
-                    <Link
+                    <NavigationLink
                       href="/admin"
                       className="px-4 py-2 hover:bg-gray-50 rounded flex items-center gap-2 text-red-600"
                       onClick={() => setIsMenuOpen(false)}
                     >
                       <Shield className="w-4 h-4" />
                       Admin Panel
-                    </Link>
+                    </NavigationLink>
                   )}
                   <button
                     onClick={() => {
@@ -251,20 +252,20 @@ export function Navigation() {
                 </>
               ) : (
                 <>
-                  <Link
+                  <NavigationLink
                     href="/login"
                     className="px-4 py-2 hover:bg-gray-50 rounded"
                     onClick={() => setIsMenuOpen(false)}
                   >
                     Sign In
-                  </Link>
-                  <Link
+                  </NavigationLink>
+                  <NavigationLink
                     href="/signup"
                     className="px-4 py-2 hover:bg-gray-50 rounded"
                     onClick={() => setIsMenuOpen(false)}
                   >
                     Sign Up
-                  </Link>
+                  </NavigationLink>
                 </>
               )}
             </div>

@@ -31,6 +31,16 @@ ADD COLUMN IF NOT EXISTS delivery_address TEXT;
 ALTER TABLE orders 
 ADD COLUMN IF NOT EXISTS tracking_number VARCHAR(100);
 
+-- Add missing payment_plan column to orders table
+ALTER TABLE orders 
+ADD COLUMN IF NOT EXISTS payment_plan VARCHAR(20) DEFAULT 'full';
+
+-- Add missing payment status columns to orders table
+ALTER TABLE orders 
+ADD COLUMN IF NOT EXISTS payment_status VARCHAR(20) DEFAULT 'pending',
+ADD COLUMN IF NOT EXISTS amount_paid DECIMAL(10,2) DEFAULT 0,
+ADD COLUMN IF NOT EXISTS remaining_amount DECIMAL(10,2) DEFAULT 0;
+
 -- Add comments to the columns
 COMMENT ON COLUMN payment_settings.iban IS 'International Bank Account Number for international transfers (up to 34 characters)';
 COMMENT ON COLUMN payment_settings.paypal_enabled IS 'Enable/disable PayPal payment option';
@@ -187,3 +197,126 @@ COMMENT ON COLUMN payment_transactions.amount IS 'Transaction amount in GBP';
 COMMENT ON COLUMN payment_transactions.status IS 'Transaction status: pending, completed, failed, cancelled';
 COMMENT ON COLUMN payment_transactions.transaction_reference IS 'External transaction reference (PayPal ID, bank ref, etc.)';
 COMMENT ON COLUMN payment_transactions.notes IS 'Additional transaction notes or instructions';
+
+-- Function to calculate remaining amount based on payment plan
+CREATE OR REPLACE FUNCTION calculate_remaining_amount(order_total DECIMAL, amount_paid DECIMAL, payment_plan VARCHAR)
+RETURNS DECIMAL AS $$
+BEGIN
+  IF payment_plan = 'half' THEN
+    RETURN GREATEST(0, (order_total / 2) - amount_paid);
+  ELSE
+    RETURN GREATEST(0, order_total - amount_paid);
+  END IF;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Function to update order payment status based on payments (fixed ambiguous column reference)
+CREATE OR REPLACE FUNCTION update_order_payment_status()
+RETURNS TRIGGER AS $$
+DECLARE
+  order_total DECIMAL;
+  total_paid DECIMAL;
+  order_payment_plan VARCHAR;
+  required_amount DECIMAL;
+BEGIN
+  -- Get order details
+  SELECT total_amount, payment_plan INTO order_total, order_payment_plan
+  FROM orders WHERE id = NEW.order_id;
+  
+  -- Calculate total amount paid for this order
+  SELECT COALESCE(SUM(amount), 0) INTO total_paid
+  FROM payment_transactions 
+  WHERE order_id = NEW.order_id 
+  AND status = 'completed'
+  AND transaction_type = 'payment';
+  
+  -- Determine required amount based on payment plan
+  IF order_payment_plan = 'half' THEN
+    required_amount := order_total / 2;
+  ELSE
+    required_amount := order_total;
+  END IF;
+  
+  -- Update order payment status and amounts
+  UPDATE orders SET
+    amount_paid = total_paid,
+    remaining_amount = calculate_remaining_amount(order_total, total_paid, order_payment_plan),
+    payment_status = CASE
+      WHEN total_paid >= order_total THEN 'paid'
+      WHEN total_paid >= required_amount THEN 'partially_paid'
+      WHEN total_paid > 0 THEN 'partial'
+      ELSE 'pending'
+    END
+  WHERE id = NEW.order_id;
+  
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Create trigger to automatically update order payment status
+DROP TRIGGER IF EXISTS update_order_payment_status_trigger ON payment_transactions;
+CREATE TRIGGER update_order_payment_status_trigger
+  AFTER INSERT OR UPDATE OF status ON payment_transactions
+  FOR EACH ROW EXECUTE FUNCTION update_order_payment_status();
+
+-- Add performance indexes
+CREATE INDEX IF NOT EXISTS idx_orders_payment_plan ON orders(payment_plan);
+CREATE INDEX IF NOT EXISTS idx_orders_payment_status ON orders(payment_status);
+
+-- Ensure order_items table has proper foreign key constraints
+-- This will help catch foreign key violations early
+CREATE TABLE IF NOT EXISTS order_items (
+    id SERIAL PRIMARY KEY,
+    order_id INTEGER REFERENCES orders(id) ON DELETE CASCADE,
+    part_id INTEGER REFERENCES parts(id) ON DELETE CASCADE,
+    quantity INTEGER NOT NULL DEFAULT 1,
+    price DECIMAL(10,2) NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Add constraints to ensure data integrity
+ALTER TABLE order_items 
+  ADD CONSTRAINT IF NOT EXISTS check_quantity_positive 
+  CHECK (quantity > 0);
+
+ALTER TABLE order_items 
+  ADD CONSTRAINT IF NOT EXISTS check_price_positive 
+  CHECK (price >= 0);
+
+-- Add index for better performance on part_id lookups
+CREATE INDEX IF NOT EXISTS idx_order_items_part_id ON order_items(part_id);
+CREATE INDEX IF NOT EXISTS idx_order_items_order_id ON order_items(order_id);
+
+-- Enable RLS on order_items if not already enabled
+ALTER TABLE order_items ENABLE ROW LEVEL SECURITY;
+
+-- Create RLS policies for order_items (if they don't exist)
+DROP POLICY IF EXISTS "Users can view their order items" ON order_items;
+CREATE POLICY "Users can view their order items" ON order_items
+    FOR SELECT USING (
+        EXISTS (
+            SELECT 1 FROM orders 
+            WHERE orders.id = order_items.order_id 
+            AND orders.user_id = auth.uid()
+        )
+    );
+
+DROP POLICY IF EXISTS "Users can create order items for their orders" ON order_items;
+CREATE POLICY "Users can create order items for their orders" ON order_items
+    FOR INSERT WITH CHECK (
+        EXISTS (
+            SELECT 1 FROM orders 
+            WHERE orders.id = order_items.order_id 
+            AND orders.user_id = auth.uid()
+        )
+    );
+
+DROP POLICY IF EXISTS "Admins can manage all order items" ON order_items;
+CREATE POLICY "Admins can manage all order items" ON order_items
+    FOR ALL USING (
+        EXISTS (
+            SELECT 1 FROM user_profiles 
+            WHERE user_profiles.user_id = auth.uid() 
+            AND user_profiles.role = 'admin'
+        )
+    );

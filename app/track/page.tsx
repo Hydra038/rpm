@@ -207,24 +207,24 @@ function TrackContent() {
 
   return (
     <main className="container mx-auto p-4 max-w-4xl">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">Track Your Order</h1>
-        <p className="text-gray-600">Enter your tracking number or order ID to see the latest updates</p>
+      <div className="mb-6 md:mb-8">
+        <h1 className="text-2xl md:text-3xl font-bold mb-2">Track Your Order</h1>
+        <p className="text-gray-600 text-sm md:text-base">Enter your tracking number or order ID to see the latest updates</p>
       </div>
 
       {/* Tracking Input */}
-      <Card className="mb-8">
+      <Card className="mb-6 md:mb-8">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+          <CardTitle className="flex items-center gap-2 text-lg md:text-xl">
             <Search className="w-5 h-5" />
             Track Your Package
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex gap-4">
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
             <input
               type="text"
-              placeholder="Enter tracking number or order ID (e.g., RPM123456789)"
+              placeholder="Enter tracking number or order ID"
               value={trackingNumber}
               onChange={(e) => {
                 setTrackingNumber(e.target.value.toUpperCase());
@@ -236,10 +236,10 @@ function TrackContent() {
                   setError('');
                 }
               }}
-              className="flex-1 border rounded-md px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="flex-1 border rounded-md px-3 md:px-4 py-2 md:py-3 text-sm md:text-base focus:outline-none focus:ring-2 focus:ring-blue-500"
               onKeyDown={(e) => e.key === 'Enter' && handleTrackOrder()}
             />
-            <Button onClick={() => handleTrackOrder()} disabled={loading} className="px-8">
+            <Button onClick={() => handleTrackOrder()} disabled={loading} className="px-6 md:px-8 py-2 md:py-3 text-sm md:text-base">
               {loading ? 'Tracking...' : 'Track Order'}
             </Button>
           </div>
@@ -293,25 +293,25 @@ function TrackContent() {
               <CardTitle>Order Summary</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <div>
-                  <p className="text-sm text-gray-600">Order ID</p>
-                  <p className="font-semibold">{orderData.id}</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="bg-gray-50 p-3 rounded-lg">
+                  <p className="text-xs md:text-sm text-gray-600">Order ID</p>
+                  <p className="font-semibold text-sm md:text-base">#{orderData.id}</p>
                 </div>
-                <div>
-                  <p className="text-sm text-gray-600">Tracking Number</p>
-                  <p className="font-semibold">{orderData.tracking_number || 'Not assigned yet'}</p>
+                <div className="bg-gray-50 p-3 rounded-lg">
+                  <p className="text-xs md:text-sm text-gray-600">Tracking Number</p>
+                  <p className="font-semibold text-sm md:text-base break-all">{orderData.tracking_number || 'Not assigned yet'}</p>
                 </div>
-                <div>
-                  <p className="text-sm text-gray-600">Status</p>
+                <div className="bg-gray-50 p-3 rounded-lg">
+                  <p className="text-xs md:text-sm text-gray-600">Status</p>
                   <div className="flex items-center gap-2">
                     {getStatusIcon(orderData.status)}
-                    <span className="font-semibold capitalize">{orderData.status.replace('_', ' ')}</span>
+                    <span className="font-semibold capitalize text-sm md:text-base">{orderData.status.replace('_', ' ')}</span>
                   </div>
                 </div>
-                <div>
-                  <p className="text-sm text-gray-600">Estimated Delivery</p>
-                  <p className="font-semibold">
+                <div className="bg-gray-50 p-3 rounded-lg">
+                  <p className="text-xs md:text-sm text-gray-600">Estimated Delivery</p>
+                  <p className="font-semibold text-sm md:text-base">
                     {new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toLocaleDateString('en-GB', {
                       weekday: 'short',
                       day: 'numeric',
@@ -334,16 +334,16 @@ function TrackContent() {
             <CardContent>
               <div className="space-y-4">
                 {trackingEvents.map((event, index) => (
-                  <div key={index} className="flex gap-4">
-                    <div className={`flex-shrink-0 w-12 h-12 rounded-full border-2 flex items-center justify-center ${getStatusColor(event.status)}`}>
+                  <div key={index} className="flex gap-3 md:gap-4">
+                    <div className={`flex-shrink-0 w-10 h-10 md:w-12 md:h-12 rounded-full border-2 flex items-center justify-center ${getStatusColor(event.status)}`}>
                       {getStatusIcon(event.status)}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between mb-1">
-                        <h4 className="font-semibold capitalize">
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-1 gap-1">
+                        <h4 className="font-semibold capitalize text-sm md:text-base">
                           {event.status.replace('_', ' ')}
                         </h4>
-                        <span className="text-sm text-gray-500">
+                        <span className="text-xs md:text-sm text-gray-500 order-first sm:order-last">
                           {new Date(event.timestamp).toLocaleDateString('en-GB')} at{' '}
                           {new Date(event.timestamp).toLocaleTimeString('en-GB', { 
                             hour: '2-digit', 
@@ -351,8 +351,8 @@ function TrackContent() {
                           })}
                         </span>
                       </div>
-                      <p className="text-gray-700 mb-1">{event.description}</p>
-                      <div className="flex items-center gap-1 text-sm text-gray-500">
+                      <p className="text-gray-700 mb-1 text-xs md:text-sm">{event.description}</p>
+                      <div className="flex items-center gap-1 text-xs md:text-sm text-gray-500">
                         <MapPin className="w-3 h-3" />
                         {event.location}
                       </div>
@@ -423,28 +423,28 @@ function TrackContent() {
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="flex items-center gap-3 p-4 bg-blue-50 rounded-lg">
-                  <Phone className="w-5 h-5 text-blue-600" />
+                <div className="flex items-start sm:items-center gap-3 p-3 md:p-4 bg-blue-50 rounded-lg">
+                  <Phone className="w-5 h-5 text-blue-600 flex-shrink-0 mt-1 sm:mt-0" />
                   <div>
-                    <p className="font-semibold text-blue-900">WhatsApp Only</p>
-                    <p className="text-blue-700">+44 7723832186</p>
+                    <p className="font-semibold text-blue-900 text-sm md:text-base">WhatsApp Only</p>
+                    <p className="text-blue-700 text-sm md:text-base break-all">+44 7723832186</p>
                     <p className="text-xs text-blue-600">WhatsApp messages only</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-3 p-4 bg-green-50 rounded-lg">
-                  <Mail className="w-5 h-5 text-green-600" />
+                <div className="flex items-start sm:items-center gap-3 p-3 md:p-4 bg-green-50 rounded-lg">
+                  <Mail className="w-5 h-5 text-green-600 flex-shrink-0 mt-1 sm:mt-0" />
                   <div>
-                    <p className="font-semibold text-green-900">Email Support</p>
-                    <p className="text-green-700">support@rpmgenuineautoparts.info</p>
+                    <p className="font-semibold text-green-900 text-sm md:text-base">Email Support</p>
+                    <p className="text-green-700 text-sm md:text-base break-all">support@rpmgenuineautoparts.info</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-3 p-4 bg-purple-50 rounded-lg">
-                  <svg className="w-5 h-5 text-purple-600" fill="currentColor" viewBox="0 0 24 24">
+                <div className="flex items-start sm:items-center gap-3 p-3 md:p-4 bg-purple-50 rounded-lg">
+                  <svg className="w-5 h-5 text-purple-600 flex-shrink-0 mt-1 sm:mt-0" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
                   </svg>
                   <div>
-                    <p className="font-semibold text-purple-900">Facebook</p>
-                    <a href="https://web.facebook.com/profile.php?id=61563129454615" target="_blank" rel="noopener noreferrer" className="text-purple-700 hover:underline">
+                    <p className="font-semibold text-purple-900 text-sm md:text-base">Facebook</p>
+                    <a href="https://web.facebook.com/profile.php?id=61563129454615" target="_blank" rel="noopener noreferrer" className="text-purple-700 hover:underline text-sm md:text-base">
                       Visit our page
                     </a>
                   </div>
