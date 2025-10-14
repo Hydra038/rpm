@@ -243,9 +243,7 @@ function generateInvoiceHTML(orderData: any, subtotal: number, total: number, pa
         <div class="invoice-header">
             <div class="company-info">
                 <h1>RPM Genuine Auto Parts</h1>
-                <p>123 Auto Parts Lane</p>
-                <p>Manchester, M1 1AA</p>
-                <p>United Kingdom</p>
+                <p>Norwich, UK</p>
                 <p>WhatsApp: +44 7723832186</p>
                 <p>Email: support@rpmgenuineautoparts.info</p>
             </div>

@@ -41,7 +41,7 @@ export default function CheckoutPage() {
   const router = useRouter();
 
   const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  const shipping_cost = 9.99; // Standard shipping fee
+  const shipping_cost = 0; // Free shipping
   const total = subtotal + shipping_cost;
   const halfPaymentAmount = (total / 2);
   const paymentAmount = paymentPlan === 'half' ? halfPaymentAmount : total;
@@ -727,8 +727,8 @@ export default function CheckoutPage() {
                       <span>{formatCurrency(subtotal)}</span>
                     </div>
                     <div className="flex justify-between text-sm">
-                      <span>Standard Shipping</span>
-                      <span>{formatCurrency(shipping_cost)}</span>
+                      <span>Shipping</span>
+                      <span className="text-blue-600 font-medium text-xs">Handled by DHL/Courier</span>
                     </div>
                     <div className="border-t pt-2 flex justify-between font-bold text-lg">
                       <span>Total</span>

@@ -9,8 +9,7 @@ import AdminLayout from './components/AdminLayout'
 export default function AdminPage() {
   const [isSeeding, setIsSeeding] = useState(false)
   const [seedMessage, setSeedMessage] = useState('')
-  const [isOrderSeeding, setIsOrderSeeding] = useState(false)
-  const [orderSeedMessage, setOrderSeedMessage] = useState('')
+
   const [stats, setStats] = useState({
     totalProducts: 0,
     totalOrders: 0,
@@ -93,57 +92,7 @@ export default function AdminPage() {
     }
   }
 
-  const seedOrders = async () => {
-    setIsOrderSeeding(true)
-    setOrderSeedMessage('')
-    
-    try {
-      const response = await fetch('/api/seed-orders', {
-        method: 'POST',
-      })
-      const data = await response.json()
-      
-      if (response.ok) {
-        setOrderSeedMessage(`Successfully seeded ${data.orders} sample orders!`)
-        // Refresh stats after seeding
-        const { data: orders, count: orderCount } = await supabase
-          .from('orders')
-          .select('total_amount', { count: 'exact' })
-        
-        const totalRevenue = orders?.reduce((sum, order) => sum + (order.total_amount || 0), 0) || 0
-        
-        const { data: recentOrders } = await supabase
-          .from('orders')
-          .select(`
-            id,
-            total_amount,
-            status,
-            created_at,
-            order_items (
-              quantity,
-              parts (
-                name
-              )
-            )
-          `)
-          .order('created_at', { ascending: false })
-          .limit(5)
 
-        setStats(prev => ({ 
-          ...prev, 
-          totalOrders: orderCount || 0,
-          totalRevenue: totalRevenue,
-          recentOrders: recentOrders || []
-        }))
-      } else {
-        setOrderSeedMessage(`Error: ${data.error}`)
-      }
-    } catch (error) {
-      setOrderSeedMessage('Failed to seed orders')
-    } finally {
-      setIsOrderSeeding(false)
-    }
-  }
 
   const getStatusColor = (status: string) => {
     switch (status?.toLowerCase()) {
@@ -257,20 +206,7 @@ export default function AdminPage() {
               </div>
             )}
 
-            <button 
-              onClick={seedOrders}
-              disabled={isOrderSeeding}
-              className="w-full bg-yellow-500 text-white px-4 py-3 rounded-lg hover:bg-yellow-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
-            >
-              {isOrderSeeding ? 'Seeding Orders...' : 'Seed Sample Orders'}
-            </button>
-            {orderSeedMessage && (
-              <div className={`p-3 rounded-lg text-sm ${
-                orderSeedMessage.includes('Error') ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'
-              }`}>
-                {orderSeedMessage}
-              </div>
-            )}
+
             
             <Link href="/admin/products">
               <button className="w-full bg-blue-500 text-white px-4 py-3 rounded-lg hover:bg-blue-600 transition-colors font-medium">

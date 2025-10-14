@@ -11,14 +11,41 @@ export async function POST() {
       process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
     );
 
-    // Use sample UUIDs for testing - no need to check real users
-    const userIds = [
+    // Use fixed sample user IDs and ensure they exist in user_profiles
+    const sampleUserIds = [
       '11111111-1111-1111-1111-111111111111',
       '22222222-2222-2222-2222-222222222222',
       '33333333-3333-3333-3333-333333333333'
     ];
 
-    console.log('Using sample user IDs for testing');
+    console.log('Ensuring sample user profiles exist...');
+    
+    // Create/ensure sample user profiles exist (ignore errors if they already exist)
+    const sampleUsers = [
+      { user_id: sampleUserIds[0], email: 'customer1@example.com', first_name: 'John', last_name: 'Smith', role: 'customer' },
+      { user_id: sampleUserIds[1], email: 'customer2@example.com', first_name: 'Jane', last_name: 'Doe', role: 'customer' },
+      { user_id: sampleUserIds[2], email: 'customer3@example.com', first_name: 'Mike', last_name: 'Johnson', role: 'customer' }
+    ];
+    
+    // Try to create each user profile, ignore errors if they already exist
+    for (const user of sampleUsers) {
+      try {
+        const { error: insertError } = await supabase
+          .from('user_profiles')
+          .insert(user);
+        
+        if (insertError && insertError.code !== '23505') {
+          console.log('User profile insert result for', user.email, ':', insertError.message);
+        } else {
+          console.log('User profile ready for', user.email);
+        }
+      } catch (error) {
+        console.log('User profile setup for', user.email, '- probably already exists');
+      }
+    }
+
+    const userIds = sampleUserIds;
+    console.log('Using', userIds.length, 'sample user IDs for order creation');
 
     // Get some products to create orders with
     const { data: products, error: productsError } = await supabase
@@ -112,12 +139,25 @@ export async function POST() {
       }
     }
 
+    // Verify the orders were created and are visible
+    const { data: verifyOrders, error: verifyError } = await supabase
+      .from('orders')
+      .select('id, user_id, status')
+      .in('id', createdOrders.map(o => o.id));
+    
+    if (verifyError) {
+      console.error('Error verifying orders:', verifyError);
+    } else {
+      console.log('Verification: Orders visible after creation:', verifyOrders?.length || 0);
+    }
+
     console.log(`Successfully seeded ${createdOrders.length} sample orders!`);
     
     return NextResponse.json({ 
       message: `Successfully seeded ${createdOrders.length} sample orders!`,
       orders: createdOrders.length,
-      userIds: userIds.length
+      userIds: userIds.length,
+      verified: verifyOrders?.length || 0
     });
   } catch (error: any) {
     console.error('Error seeding orders:', error);

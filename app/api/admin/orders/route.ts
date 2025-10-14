@@ -3,13 +3,40 @@ import { createClient } from '@supabase/supabase-js'
 
 export async function GET() {
   try {
-    console.log('Admin orders API called');
+    console.log('=== ADMIN ORDERS DEBUG ===');
+    console.log('Service role key available:', !!process.env.SUPABASE_SERVICE_ROLE_KEY);
+    console.log('Using key type:', process.env.SUPABASE_SERVICE_ROLE_KEY ? 'service_role' : 'anon_key');
     
     // Use service role to bypass RLS
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+      process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        }
+      }
     );
+
+    // First test: Simple order count
+    const { count, error: countError } = await supabase
+      .from('orders')
+      .select('*', { count: 'exact', head: true });
+    
+    console.log('Total orders count:', count, 'Error:', countError?.message);
+
+    // Second test: Basic order fetch
+    const { data: basicOrders, error: basicError } = await supabase
+      .from('orders')
+      .select('id, user_id, status, created_at, total_amount')
+      .limit(5);
+    
+    console.log('Basic orders fetch:', {
+      found: basicOrders?.length || 0,
+      error: basicError?.message,
+      sample: basicOrders?.[0]
+    });
 
     // Get orders with items and part details
     const { data: orders, error } = await supabase
@@ -30,10 +57,10 @@ export async function GET() {
       `)
       .order('created_at', { ascending: false });
 
-    console.log('Orders query result:', { 
-      ordersFound: orders?.length || 0, 
-      error: error,
-      sampleOrder: orders?.[0]
+    console.log('Final orders query result:', {
+      ordersFound: orders?.length || 0,
+      error: error?.message,
+      hasOrderItems: orders?.[0]?.order_items?.length > 0
     });
 
     if (error) {
@@ -102,18 +129,33 @@ export async function DELETE(request: Request) {
       process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
     );
 
-    const { error } = await supabase
+    // First, delete all order items for this order
+    const { error: orderItemsError } = await supabase
+      .from('order_items')
+      .delete()
+      .eq('order_id', orderId);
+
+    if (orderItemsError) {
+      console.error('Error deleting order items:', orderItemsError);
+      throw orderItemsError;
+    }
+
+    // Then delete the order itself
+    const { error: orderError } = await supabase
       .from('orders')
       .delete()
       .eq('id', orderId);
 
-    if (error) throw error;
+    if (orderError) {
+      console.error('Error deleting order:', orderError);
+      throw orderError;
+    }
 
     return NextResponse.json({ success: true });
   } catch (error: any) {
     console.error('Error deleting order:', error);
     return NextResponse.json(
-      { error: 'Failed to delete order' },
+      { error: 'Failed to delete order: ' + error.message },
       { status: 500 }
     );
   }

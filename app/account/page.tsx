@@ -120,8 +120,15 @@ export default function AccountPage() {
           
           if (error) {
             console.error('Error fetching user orders:', error);
+            console.error('Error details:', {
+              message: error.message,
+              details: error.details,
+              hint: error.hint,
+              code: error.code
+            });
             setOrders([]);
           } else {
+            console.log('Successfully fetched orders:', orders?.length || 0);
             setOrders(orders || []);
           }
         }
