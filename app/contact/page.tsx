@@ -197,9 +197,7 @@ export default function ContactPage() {
                   <MapPin className="w-5 h-5 text-gray-600" />
                   <div>
                     <p className="font-semibold text-gray-900">Address</p>
-                    <p className="text-gray-700">123 Auto Parts Lane</p>
-                    <p className="text-gray-700">Manchester, M1 1AA</p>
-                    <p className="text-gray-700">United Kingdom</p>
+                    <p className="text-gray-700">Norwich, UK</p>
                   </div>
                 </div>
                 
