@@ -3,20 +3,16 @@ import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { fetchProducts, fetchCategories } from '../../lib/supabase/products';
 import { ProductCard } from '../../components/ProductCard';
-import { VinLookup } from '../../components/VinLookup';
 import { SearchBar } from '../../components/SearchBar';
 import { ProductRecommendations } from '../../components/ProductRecommendations';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Car, Filter, X } from 'lucide-react';
+import { Car } from 'lucide-react';
 
 function ProductsContent() {
   const searchParams = useSearchParams();
   const [filters, setFilters] = useState({ 
-    make: '', 
-    model: '', 
-    year: '', 
     category: searchParams.get('category') || '' 
   });
   const [products, setProducts] = useState<any[]>([]);
@@ -25,7 +21,6 @@ function ProductsContent() {
   const [seeding, setSeeding] = useState(false);
   const [totalCount, setTotalCount] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedVehicle, setSelectedVehicle] = useState<any>(null);
   const [recentlyViewed, setRecentlyViewed] = useState<any[]>([]);
 
   useEffect(() => {
@@ -36,9 +31,6 @@ function ProductsContent() {
   useEffect(() => {
     setLoading(true);
     fetchProducts({
-      make: filters.make,
-      model: filters.model,
-      year: filters.year ? Number(filters.year) : undefined,
       category: filters.category,
       search: searchQuery,
       limit: 1000, // Fetch up to 1000 products
@@ -77,9 +69,6 @@ function ProductsContent() {
           
           // Refresh products after seeding
           const newProducts = await fetchProducts({
-            make: filters.make,
-            model: filters.model,
-            year: filters.year ? Number(filters.year) : undefined,
             category: filters.category,
             search: searchQuery,
             limit: 1000,
@@ -106,11 +95,11 @@ function ProductsContent() {
   };
 
   const clearFilters = () => {
-    setFilters({ make: '', model: '', year: '', category: '' });
+    setFilters({ category: '' });
     setSearchQuery('');
   };
 
-  const hasActiveFilters = filters.make || filters.model || filters.year || filters.category || searchQuery;
+  const hasActiveFilters = filters.category || searchQuery;
 
   return (
     <main className="container mx-auto px-2 sm:px-4 py-4 space-y-4 sm:space-y-6">
@@ -119,7 +108,7 @@ function ProductsContent() {
         <p className="text-gray-600 text-sm sm:text-base">Find the perfect parts for your vehicle</p>
       </div>
 
-      {/* VIN Lookup and Search */}
+      {/* Search */}
       <Card>
         <CardHeader className="pb-3 sm:pb-6">
           <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
@@ -128,7 +117,6 @@ function ProductsContent() {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4 sm:space-y-6 p-3 sm:p-6">
-          <VinLookup onVehicleSelect={setSelectedVehicle} />
           <SearchBar onSearch={setSearchQuery} products={products} />
         </CardContent>
       </Card>
@@ -158,63 +146,7 @@ function ProductsContent() {
         </CardContent>
       </Card>
 
-      {/* Vehicle Filters */}
-      <Card>
-        <CardHeader className="pb-3 sm:pb-6">
-          <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
-            <Filter className="w-4 h-4 sm:w-5 sm:h-5" />
-            Vehicle Filters
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="p-3 sm:p-4">
-          <div className="space-y-3 sm:space-y-0 sm:flex sm:flex-wrap sm:gap-3 mb-4">
-            <div className="flex-1 sm:min-w-[200px]">
-              <label className="block text-sm font-medium mb-1 text-gray-700">Make</label>
-              <input 
-                className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
-                placeholder="e.g. Toyota, Honda" 
-                value={filters.make} 
-                onChange={e => setFilters(f => ({ ...f, make: e.target.value }))} 
-              />
-            </div>
-            <div className="flex-1 sm:min-w-[200px]">
-              <label className="block text-sm font-medium mb-1 text-gray-700">Model</label>
-              <input 
-                className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
-                placeholder="e.g. Camry, Civic" 
-                value={filters.model} 
-                onChange={e => setFilters(f => ({ ...f, model: e.target.value }))} 
-              />
-            </div>
-            <div className="flex-1 sm:min-w-[150px]">
-              <label className="block text-sm font-medium mb-1 text-gray-700">Year</label>
-              <input 
-                className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
-                placeholder="e.g. 2020" 
-                value={filters.year} 
-                onChange={e => setFilters(f => ({ ...f, year: e.target.value }))} 
-              />
-            </div>
-          </div>
-          {hasActiveFilters && (
-            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 sm:gap-0">
-              <span className="text-sm text-gray-600 text-center sm:text-left">
-                {products.length} product{products.length !== 1 ? 's' : ''} found
-                {searchQuery && ` for "${searchQuery}"`}
-              </span>
-              <Button variant="outline" size="sm" onClick={clearFilters} className="flex items-center gap-2 w-full sm:w-auto justify-center">
-                <X className="w-4 h-4" />
-                Clear All Filters
-              </Button>
-            </div>
-          )}
-          {!hasActiveFilters && totalCount > 0 && (
-            <div className="text-sm text-gray-600 text-center sm:text-left">
-              Showing {products.length} of {totalCount} products
-            </div>
-          )}
-        </CardContent>
-      </Card>
+
 
       {loading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6">
