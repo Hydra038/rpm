@@ -7,7 +7,7 @@ import { getUser } from '../../lib/supabase/auth';
 import { formatCurrency } from '../../lib/currency';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ShoppingBag, CreditCard, Truck, Lock, Building, DollarSign, Percent, Info, Copy, Check, AlertCircle } from 'lucide-react';
+import { ShoppingBag, CreditCard, Truck, Lock, Building, DollarSign, Percent, Info, Copy, Check, AlertCircle, Shield } from 'lucide-react';
 
 interface PaymentSettings {
   paypal_email: string;
