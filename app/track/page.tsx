@@ -4,7 +4,7 @@ import { useSearchParams } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Search, Package, Truck, CheckCircle, MapPin, Calendar, Clock, Phone, Mail } from 'lucide-react';
-import { supabase } from '../../lib/supabase/client';
+import { formatCurrency } from '../../lib/currency';
 
 interface TrackingEvent {
   status: string;
@@ -24,6 +24,7 @@ interface OrderData {
   total_amount: number;
   order_items: Array<{
     quantity: number;
+    price: number;
     parts: {
       name: string;
       image_url: string;
@@ -121,50 +122,37 @@ function TrackContent() {
     setHasSearched(true);
 
     try {
-      // Search by tracking number
-      const { data, error: orderError } = await supabase
-        .from('orders')
-        .select(`
-          *,
-          order_items (
-            quantity,
-            parts (
-              name,
-              image_url
-            )
-          )
-        `)
-        .eq('tracking_number', numberToTrack.toUpperCase().trim())
-        .single();
-
-      if (orderError || !data) {
-        // Also try searching by order ID
-        const { data: orderById, error: orderByIdError } = await supabase
-          .from('orders')
-          .select(`
-            *,
-            order_items (
-              quantity,
-              parts (
-                name,
-                image_url
-              )
-            )
-          `)
-          .eq('id', numberToTrack.trim())
-          .single();
-
-        if (orderByIdError || !orderById) {
+      // Use API route which has service role access (bypasses RLS)
+      const response = await fetch(`/api/tracking?tracking=${encodeURIComponent(numberToTrack.trim())}`);
+      
+      if (!response.ok) {
+        // Try with order ID if tracking number fails
+        const orderIdResponse = await fetch(`/api/tracking?order=${encodeURIComponent(numberToTrack.trim())}`);
+        
+        if (!orderIdResponse.ok) {
+          setError('Order not found. Please check your tracking number and try again.');
+          return;
+        }
+        
+        const { order: orderById } = await orderIdResponse.json();
+        if (!orderById) {
           setError('Order not found. Please check your tracking number and try again.');
           return;
         }
         
         setOrderData(orderById);
         setTrackingEvents(generateTrackingEvents(orderById.status, orderById.created_at));
-      } else {
-        setOrderData(data);
-        setTrackingEvents(generateTrackingEvents(data.status, data.created_at));
+        return;
       }
+      
+      const { order } = await response.json();
+      if (!order) {
+        setError('Order not found. Please check your tracking number and try again.');
+        return;
+      }
+      
+      setOrderData(order);
+      setTrackingEvents(generateTrackingEvents(order.status, order.created_at));
     } catch (err) {
       setError('Failed to track order. Please try again.');
       console.error('Tracking error:', err);
@@ -386,9 +374,23 @@ function TrackContent() {
                     <div className="flex-1">
                       <h4 className="font-semibold">{item.parts.name}</h4>
                       <p className="text-sm text-gray-600">Quantity: {item.quantity}</p>
+                      <p className="text-sm font-semibold text-blue-600">
+                        {formatCurrency(item.price)} each
+                      </p>
+                      <p className="text-sm text-gray-700 mt-1">
+                        Subtotal: <span className="font-semibold">{formatCurrency(item.price * item.quantity)}</span>
+                      </p>
                     </div>
                   </div>
                 ))}
+              </div>
+              
+              {/* Order Total */}
+              <div className="mt-4 pt-4 border-t">
+                <div className="flex justify-between items-center">
+                  <span className="text-lg font-semibold">Order Total:</span>
+                  <span className="text-xl font-bold text-blue-600">{formatCurrency(orderData.total_amount)}</span>
+                </div>
               </div>
             </CardContent>
           </Card>

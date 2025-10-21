@@ -758,9 +758,30 @@ export default function CheckoutPage() {
                     {loading ? 'Processing...' : `Place Order - ${formatCurrency(paymentAmount)}`}
                   </Button>
                   
-                  <div className="flex items-center gap-2 text-sm text-gray-600 bg-gray-50 p-3 rounded">
-                    <Lock className="w-4 h-4" />
-                    <span>Secure checkout with 256-bit SSL encryption</span>
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2 text-sm text-gray-600 bg-gray-50 p-3 rounded">
+                      <Lock className="w-4 h-4" />
+                      <span>Secure checkout with 256-bit SSL encryption</span>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+                      <div className="flex items-center gap-2 text-green-600 bg-green-50 p-2 rounded">
+                        <Shield className="w-4 h-4" />
+                        <span>30-Day Money-Back Guarantee</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-blue-600 bg-blue-50 p-2 rounded">
+                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                          <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span>PCI DSS Compliant</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-purple-600 bg-purple-50 p-2 rounded">
+                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                        </svg>
+                        <span>Genuine Parts Only</span>
+                      </div>
+                    </div>
                   </div>
                   
 

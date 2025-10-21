@@ -2,6 +2,7 @@ import './globals.css';
 import type { ReactNode } from 'react';
 import { Navigation } from '@/components/Navigation';
 import { GlobalLoadingProvider } from '@/components/GlobalLoadingProvider';
+import { Footer } from '@/components/Footer';
 
 export const metadata = {
   title: 'RPM - Auto Parts Marketplace',
@@ -17,6 +18,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           <div className="pt-16">
             {children}
           </div>
+          <Footer />
         </GlobalLoadingProvider>
       </body>
     </html>

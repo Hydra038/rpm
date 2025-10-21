@@ -211,9 +211,9 @@ export default function AdminOrdersPage() {
 
   return (
     <AdminLayout>
-      <div className="mb-8">
-        <h2 className="text-3xl font-bold text-gray-900 mb-2">Order Management</h2>
-        <p className="text-gray-600">Manage customer orders, update statuses, and track shipments</p>
+      <div className="mb-6 sm:mb-8">
+        <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Order Management</h2>
+        <p className="text-sm sm:text-base text-gray-600">Manage customer orders, update statuses, and track shipments</p>
       </div>
 
       {message && (
@@ -246,18 +246,18 @@ export default function AdminOrdersPage() {
       ) : (
         <div className="space-y-6">
           {/* Summary Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
             {ORDER_STATUSES.slice(0, 4).map(status => {
               const count = orders.filter(order => order.status === status.value).length;
               return (
                 <Card key={status.value}>
-                  <CardContent className="p-4">
+                  <CardContent className="p-3 sm:p-4">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-sm text-gray-600">{status.label}</p>
-                        <p className="text-2xl font-bold">{count}</p>
+                        <p className="text-xs sm:text-sm text-gray-600">{status.label}</p>
+                        <p className="text-xl sm:text-2xl font-bold">{count}</p>
                       </div>
-                      <div className={`p-3 rounded-full ${status.color.replace('text-', 'text-').replace('bg-', 'bg-')}`}>
+                      <div className={`p-2 sm:p-3 rounded-full ${status.color.replace('text-', 'text-').replace('bg-', 'bg-')}`}>
                         {getStatusIcon(status.value)}
                       </div>
                     </div>
@@ -270,38 +270,39 @@ export default function AdminOrdersPage() {
           {/* Orders List */}
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Package className="h-5 w-5" />
+              <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
+                <Package className="h-4 w-4 sm:h-5 sm:w-5" />
                 All Orders ({orders.length})
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
                 {orders.map((order) => (
-                  <div key={order.id} className="border rounded-lg p-4 hover:bg-gray-50">
-                    <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                  <div key={order.id} className="border rounded-lg p-3 sm:p-4 hover:bg-gray-50">
+                    <div className="flex flex-col gap-4">
                       <div className="flex-1">
-                        <div className="flex items-center gap-4 mb-2">
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-2">
                           <div>
-                            <h3 className="font-semibold text-lg">Order #{order.id}</h3>
-                            <div className="flex items-center gap-4 text-sm text-gray-600">
+                            <h3 className="font-semibold text-base sm:text-lg">Order #{order.id}</h3>
+                            <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs sm:text-sm text-gray-600 mt-1">
                               <span className="flex items-center gap-1">
-                                <User className="h-4 w-4" />
-                                {order.user_id.substring(0, 8)}...
+                                <User className="h-3 w-3 sm:h-4 sm:w-4" />
+                                <span className="hidden sm:inline">{order.user_id.substring(0, 8)}...</span>
+                                <span className="sm:hidden">{order.user_id.substring(0, 6)}...</span>
                               </span>
                               <span className="flex items-center gap-1">
-                                <Calendar className="h-4 w-4" />
+                                <Calendar className="h-3 w-3 sm:h-4 sm:w-4" />
                                 {new Date(order.created_at).toLocaleDateString('en-GB')}
                               </span>
                               <span className="flex items-center gap-1">
-                                <Package className="h-4 w-4" />
+                                <Package className="h-3 w-3 sm:h-4 sm:w-4" />
                                 {getTotalItems(order.order_items)} items
                               </span>
                             </div>
                           </div>
-                          <div className="flex gap-2">
+                          <div className="flex gap-2 flex-wrap">
                             {getStatusBadge(order.status)}
-                            <Badge variant="outline" className="flex items-center gap-1">
+                            <Badge variant="outline" className="flex items-center gap-1 text-xs">
                               <CreditCard className="h-3 w-3" />
                               {order.payment_status?.charAt(0).toUpperCase() + order.payment_status?.slice(1)}
                             </Badge>
@@ -309,18 +310,18 @@ export default function AdminOrdersPage() {
                         </div>
 
                         {/* Order Items Preview */}
-                        <div className="flex gap-2 overflow-x-auto mb-2">
+                        <div className="flex gap-2 overflow-x-auto mb-2 pb-2">
                           {order.order_items?.slice(0, 3).map((item, index) => (
-                            <div key={index} className="flex-shrink-0 flex items-center gap-2 bg-white border rounded p-2 min-w-[200px]">
+                            <div key={index} className="flex-shrink-0 flex items-center gap-2 bg-white border rounded p-2 min-w-[160px] sm:min-w-[200px]">
                               {item.parts?.image_url && (
                                 <img 
                                   src={item.parts.image_url} 
                                   alt={item.parts.name}
-                                  className="w-10 h-10 rounded object-cover"
+                                  className="w-8 h-8 sm:w-10 sm:h-10 rounded object-cover"
                                 />
                               )}
-                              <div className="min-w-0">
-                                <p className="text-sm font-medium truncate">
+                              <div className="min-w-0 flex-1">
+                                <p className="text-xs sm:text-sm font-medium truncate">
                                   {item.parts?.name}
                                 </p>
                                 <p className="text-xs text-gray-500">
@@ -330,33 +331,34 @@ export default function AdminOrdersPage() {
                             </div>
                           ))}
                           {order.order_items && order.order_items.length > 3 && (
-                            <div className="flex-shrink-0 flex items-center justify-center w-16 h-16 bg-gray-100 border rounded text-xs text-gray-600">
+                            <div className="flex-shrink-0 flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 bg-gray-100 border rounded text-xs text-gray-600">
                               +{order.order_items.length - 3}
                             </div>
                           )}
                         </div>
 
                         {order.tracking_number && (
-                          <div className="flex items-center gap-1 text-sm text-blue-600">
-                            <Truck className="h-4 w-4" />
+                          <div className="flex items-center gap-1 text-xs sm:text-sm text-blue-600">
+                            <Truck className="h-3 w-3 sm:h-4 sm:w-4" />
                             Tracking: {order.tracking_number}
                           </div>
                         )}
                       </div>
 
-                      <div className="flex flex-col lg:items-end gap-2">
-                        <div className="text-right">
-                          <p className="text-2xl font-bold">{formatCurrency(order.total_amount)}</p>
+                      <div className="flex flex-col sm:items-end gap-2">
+                        <div className="text-left sm:text-right">
+                          <p className="text-xl sm:text-2xl font-bold">{formatCurrency(order.total_amount)}</p>
                         </div>
                         
-                        <div className="flex gap-2">
+                        <div className="flex flex-wrap gap-2">
                           <Button
                             variant="outline"
                             size="sm"
                             onClick={() => handleEdit(order)}
+                            className="text-xs sm:text-sm"
                           >
-                            <Edit className="h-4 w-4 mr-1" />
-                            Edit
+                            <Edit className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-1" />
+                            <span className="hidden sm:inline">Edit</span>
                           </Button>
                           
                           {/* Download Invoice Buttons for Paid Orders */}
@@ -366,16 +368,17 @@ export default function AdminOrdersPage() {
                                 variant="outline"
                                 size="sm"
                                 onClick={() => handleDownloadInvoice(order.id)}
-                                className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                                className="text-xs sm:text-sm text-green-600 hover:text-green-700 hover:bg-green-50"
                               >
-                                <Download className="h-4 w-4 mr-1" />
-                                Admin Invoice
+                                <Download className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-1" />
+                                <span className="hidden lg:inline">Admin Invoice</span>
+                                <span className="lg:hidden">Invoice</span>
                               </Button>
                               <Button
                                 variant="outline"
                                 size="sm"
                                 onClick={() => window.open(`/api/orders/${order.id}/invoice`, '_blank')}
-                                className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                                className="text-xs sm:text-sm text-blue-600 hover:text-blue-700 hover:bg-blue-50 hidden sm:flex"
                               >
                                 <FileText className="h-4 w-4 mr-1" />
                                 Customer Invoice
@@ -388,7 +391,7 @@ export default function AdminOrdersPage() {
                             <Button
                               size="sm"
                               onClick={() => handleStatusUpdate(order.id, order.status, 'paid', order.tracking_number || '', order.notes || '')}
-                              className="bg-green-500 hover:bg-green-600 text-white"
+                              className="text-xs sm:text-sm bg-green-500 hover:bg-green-600 text-white"
                             >
                               Mark Paid
                             </Button>
@@ -398,7 +401,7 @@ export default function AdminOrdersPage() {
                             <Button
                               size="sm"
                               onClick={() => handleStatusUpdate(order.id, order.status, 'pending', order.tracking_number || '', order.notes || '')}
-                              className="bg-orange-500 hover:bg-orange-600 text-white"
+                              className="text-xs sm:text-sm bg-orange-500 hover:bg-orange-600 text-white hidden sm:flex"
                             >
                               Mark Unpaid
                             </Button>
@@ -409,7 +412,7 @@ export default function AdminOrdersPage() {
                             <Button
                               size="sm"
                               onClick={() => handleStatusUpdate(order.id, 'processing', order.payment_status, order.tracking_number || '', order.notes || '')}
-                              className="bg-blue-500 hover:bg-blue-600"
+                              className="text-xs sm:text-sm bg-blue-500 hover:bg-blue-600"
                             >
                               Process
                             </Button>
@@ -419,7 +422,7 @@ export default function AdminOrdersPage() {
                             <Button
                               size="sm"
                               onClick={() => handleStatusUpdate(order.id, 'shipped', order.payment_status, order.tracking_number || '', order.notes || '')}
-                              className="bg-purple-500 hover:bg-purple-600"
+                              className="text-xs sm:text-sm bg-purple-500 hover:bg-purple-600"
                             >
                               Ship
                             </Button>
@@ -429,7 +432,7 @@ export default function AdminOrdersPage() {
                             <Button
                               size="sm"
                               onClick={() => handleStatusUpdate(order.id, 'delivered', order.payment_status, order.tracking_number || '', order.notes || '')}
-                              className="bg-green-500 hover:bg-green-600"
+                              className="text-xs sm:text-sm bg-green-500 hover:bg-green-600"
                             >
                               Deliver
                             </Button>
@@ -439,10 +442,10 @@ export default function AdminOrdersPage() {
                             variant="outline"
                             size="sm"
                             onClick={() => handleDelete(order.id)}
-                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                            className="text-xs sm:text-sm text-red-600 hover:text-red-700 hover:bg-red-50"
                           >
-                            <Trash2 className="h-4 w-4 mr-1" />
-                            Delete
+                            <Trash2 className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-1" />
+                            <span className="hidden sm:inline">Delete</span>
                           </Button>
                         </div>
                       </div>
@@ -457,10 +460,10 @@ export default function AdminOrdersPage() {
 
       {/* Edit Order Modal */}
       {isEditing && selectedOrder && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <Card className="w-full max-w-md">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-3 sm:p-4 z-50 overflow-y-auto">
+          <Card className="w-full max-w-md my-8">
             <CardHeader>
-              <CardTitle>Edit Order #{selectedOrder.id}</CardTitle>
+              <CardTitle className="text-lg sm:text-xl">Edit Order #{selectedOrder.id}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
@@ -469,7 +472,7 @@ export default function AdminOrdersPage() {
                   <select
                     value={editForm.status}
                     onChange={(e) => setEditForm(prev => ({ ...prev, status: e.target.value }))}
-                    className="w-full p-2 border rounded-lg"
+                    className="w-full p-2 text-sm sm:text-base border rounded-lg"
                   >
                     {ORDER_STATUSES.map(status => (
                       <option key={status.value} value={status.value}>
@@ -484,7 +487,7 @@ export default function AdminOrdersPage() {
                   <select
                     value={editForm.payment_status}
                     onChange={(e) => setEditForm(prev => ({ ...prev, payment_status: e.target.value }))}
-                    className="w-full p-2 border rounded-lg"
+                    className="w-full p-2 text-sm sm:text-base border rounded-lg"
                   >
                     {PAYMENT_STATUSES.map(status => (
                       <option key={status.value} value={status.value}>
@@ -501,7 +504,7 @@ export default function AdminOrdersPage() {
                     value={editForm.tracking_number}
                     onChange={(e) => setEditForm(prev => ({ ...prev, tracking_number: e.target.value }))}
                     placeholder="Enter tracking number (optional)"
-                    className="w-full p-2 border rounded-lg"
+                    className="w-full p-2 text-sm sm:text-base border rounded-lg"
                   />
                 </div>
 
@@ -512,11 +515,11 @@ export default function AdminOrdersPage() {
                     onChange={(e) => setEditForm(prev => ({ ...prev, notes: e.target.value }))}
                     placeholder="Add internal notes (optional)"
                     rows={3}
-                    className="w-full p-2 border rounded-lg"
+                    className="w-full p-2 text-sm sm:text-base border rounded-lg"
                   />
                 </div>
 
-                <div className="flex gap-2 pt-4">
+                <div className="flex flex-col sm:flex-row gap-2 pt-4">
                   <Button
                     onClick={() => handleStatusUpdate(
                       selectedOrder.id,
@@ -525,7 +528,7 @@ export default function AdminOrdersPage() {
                       editForm.tracking_number,
                       editForm.notes
                     )}
-                    className="flex-1"
+                    className="flex-1 text-sm sm:text-base"
                   >
                     Update Order
                   </Button>
@@ -535,7 +538,7 @@ export default function AdminOrdersPage() {
                       setIsEditing(false);
                       setSelectedOrder(null);
                     }}
-                    className="flex-1"
+                    className="flex-1 text-sm sm:text-base"
                   >
                     Cancel
                   </Button>

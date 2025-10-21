@@ -6,6 +6,7 @@ import { formatCurrency } from '../lib/currency';
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase/client';
 import { getUser } from '../lib/supabase/auth';
+import Image from 'next/image';
 
 type ProductCardProps = {
   id: string;
@@ -169,10 +170,13 @@ export function ProductCard({
           </div>
 
           {image_url ? (
-            <img 
+            <Image
               src={image_url} 
-              alt={name} 
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200" 
+              alt={name}
+              width={300}
+              height={300}
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+              unoptimized={image_url.includes('unsplash') || image_url.startsWith('http')}
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center bg-gray-100">
@@ -237,6 +241,28 @@ export function ProductCard({
               )}
             </div>
           )}
+
+          {/* Trust Signals */}
+          <div className="flex items-center justify-center gap-3 mb-3 text-xs text-gray-600">
+            <div className="flex items-center gap-1">
+              <svg className="w-3 h-3 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+              </svg>
+              <span>Genuine</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <svg className="w-3 h-3 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 1.944A11.954 11.954 0 012.166 5C2.056 5.649 2 6.319 2 7c0 5.225 3.34 9.67 8 11.317C14.66 16.67 18 12.225 18 7c0-.682-.057-1.351-.166-2A11.954 11.954 0 0110 1.944zM11 14a1 1 0 11-2 0 1 1 0 012 0zm0-7a1 1 0 10-2 0v3a1 1 0 102 0V7z" clipRule="evenodd" />
+              </svg>
+              <span>Warranty</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <svg className="w-3 h-3 text-orange-600" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd" />
+              </svg>
+              <span>30-Day Return</span>
+            </div>
+          </div>
           
           {/* Add to Cart Button */}
           <Button

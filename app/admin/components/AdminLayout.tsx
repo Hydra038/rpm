@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import { supabase } from '../../../lib/supabase/client';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { User, Settings, Package, ShoppingCart, BarChart3, LogOut, CreditCard, MessageCircle } from 'lucide-react';
+import { User, Settings, Package, ShoppingCart, BarChart3, LogOut, CreditCard, MessageCircle, Menu, X } from 'lucide-react';
 import Link from 'next/link';
 
 interface AdminLayoutProps {
@@ -16,6 +16,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [adminSetupNeeded, setAdminSetupNeeded] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -161,7 +162,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-4">
-              <Link href="/" className="text-2xl font-bold text-blue-600">
+              <Link href="/" className="text-xl sm:text-2xl font-bold text-blue-600">
                 RPM Admin
               </Link>
               <div className="hidden md:flex items-center gap-1 text-sm text-gray-600">
@@ -170,69 +171,158 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
               </div>
             </div>
             
-            <div className="flex items-center gap-4">
-              <div className="hidden sm:flex items-center gap-2 text-sm text-gray-600">
+            <div className="flex items-center gap-2 sm:gap-4">
+              <div className="hidden sm:flex items-center gap-2 text-xs sm:text-sm text-gray-600">
                 <User className="h-4 w-4" />
-                {user.email}
+                <span className="hidden md:inline">{user.email}</span>
               </div>
-              <Button variant="outline" size="sm" onClick={handleSignOut}>
-                <LogOut className="h-4 w-4 mr-1" />
-                Sign Out
+              <Button variant="outline" size="sm" onClick={handleSignOut} className="hidden sm:flex">
+                <LogOut className="h-4 w-4 sm:mr-1" />
+                <span className="hidden sm:inline">Sign Out</span>
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                className="md:hidden"
+              >
+                {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
               </Button>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Admin Navigation */}
-      <div className="bg-white border-b">
+      {/* Mobile Navigation Menu */}
+      {mobileMenuOpen && (
+        <div className="md:hidden bg-white border-b shadow-lg">
+          <div className="container mx-auto px-4 py-3">
+            <nav className="flex flex-col gap-2">
+              <Link 
+                href="/admin" 
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium hover:bg-gray-100 transition-colors"
+              >
+                <BarChart3 className="h-4 w-4" />
+                Dashboard
+              </Link>
+              <Link 
+                href="/admin/orders" 
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium hover:bg-gray-100 transition-colors"
+              >
+                <ShoppingCart className="h-4 w-4" />
+                Orders
+              </Link>
+              <Link 
+                href="/admin/products" 
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium hover:bg-gray-100 transition-colors"
+              >
+                <Package className="h-4 w-4" />
+                Products
+              </Link>
+              <Link 
+                href="/admin/payment-settings" 
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium hover:bg-gray-100 transition-colors"
+              >
+                <CreditCard className="h-4 w-4" />
+                Payment Settings
+              </Link>
+              <Link 
+                href="/admin/chat" 
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium hover:bg-gray-100 transition-colors"
+              >
+                <MessageCircle className="h-4 w-4" />
+                Support Chat
+              </Link>
+              <Link 
+                href="/admin/images" 
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium hover:bg-gray-100 transition-colors"
+              >
+                <Settings className="h-4 w-4" />
+                Images
+              </Link>
+              <Link 
+                href="/admin/inventory" 
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium hover:bg-gray-100 transition-colors"
+              >
+                <Settings className="h-4 w-4" />
+                Inventory
+              </Link>
+              <div className="border-t pt-2 mt-2 sm:hidden">
+                <div className="text-xs text-gray-600 px-3 py-1 mb-2">{user.email}</div>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => {
+                    handleSignOut();
+                    setMobileMenuOpen(false);
+                  }}
+                  className="w-full"
+                >
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Sign Out
+                </Button>
+              </div>
+            </nav>
+          </div>
+        </div>
+      )}
+
+      {/* Desktop Navigation */}
+      <div className="bg-white border-b hidden md:block">
         <div className="container mx-auto px-4">
-          <nav className="flex gap-6 py-3">
+          <nav className="flex flex-wrap gap-2 sm:gap-6 py-3 overflow-x-auto">
             <Link 
               href="/admin" 
-              className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium hover:bg-gray-100 transition-colors"
+              className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium hover:bg-gray-100 transition-colors whitespace-nowrap"
             >
               <BarChart3 className="h-4 w-4" />
               Dashboard
             </Link>
             <Link 
               href="/admin/orders" 
-              className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium hover:bg-gray-100 transition-colors"
+              className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium hover:bg-gray-100 transition-colors whitespace-nowrap"
             >
               <ShoppingCart className="h-4 w-4" />
               Orders
             </Link>
             <Link 
               href="/admin/products" 
-              className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium hover:bg-gray-100 transition-colors"
+              className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium hover:bg-gray-100 transition-colors whitespace-nowrap"
             >
               <Package className="h-4 w-4" />
               Products
             </Link>
             <Link 
               href="/admin/payment-settings" 
-              className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium hover:bg-gray-100 transition-colors"
+              className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium hover:bg-gray-100 transition-colors whitespace-nowrap"
             >
               <CreditCard className="h-4 w-4" />
               Payment Settings
             </Link>
             <Link 
               href="/admin/chat" 
-              className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium hover:bg-gray-100 transition-colors"
+              className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium hover:bg-gray-100 transition-colors whitespace-nowrap"
             >
               <MessageCircle className="h-4 w-4" />
               Support Chat
             </Link>
             <Link 
               href="/admin/images" 
-              className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium hover:bg-gray-100 transition-colors"
+              className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium hover:bg-gray-100 transition-colors whitespace-nowrap"
             >
               <Settings className="h-4 w-4" />
               Images
             </Link>
             <Link 
               href="/admin/inventory" 
-              className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium hover:bg-gray-100 transition-colors"
+              className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium hover:bg-gray-100 transition-colors whitespace-nowrap"
             >
               <Settings className="h-4 w-4" />
               Inventory
@@ -242,7 +332,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       </div>
 
       {/* Main Content */}
-      <div className="container mx-auto p-4">
+      <div className="container mx-auto p-3 sm:p-4">
         {children}
       </div>
     </div>

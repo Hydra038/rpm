@@ -144,6 +144,12 @@ export function Navigation() {
               )}
             </Button>
 
+            {/* Trust Badge */}
+            <div className="hidden lg:flex items-center gap-1 text-xs text-green-600 bg-green-50 px-2 py-1 rounded">
+              <Shield className="w-3 h-3" />
+              <span>SSL Secured</span>
+            </div>
+
             {/* User Menu */}
             <div className="hidden md:flex items-center gap-2">
               {user ? (
@@ -165,9 +171,6 @@ export function Navigation() {
                 <div className="flex items-center gap-2">
                   <Button variant="ghost" size="sm" asChild>
                     <Link href="/login">Sign In</Link>
-                  </Button>
-                  <Button size="sm" asChild>
-                    <Link href="/signup">Sign Up</Link>
                   </Button>
                 </div>
               )}
@@ -258,13 +261,6 @@ export function Navigation() {
                     onClick={() => setIsMenuOpen(false)}
                   >
                     Sign In
-                  </NavigationLink>
-                  <NavigationLink
-                    href="/signup"
-                    className="px-4 py-2 hover:bg-gray-50 rounded"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    Sign Up
                   </NavigationLink>
                 </>
               )}
