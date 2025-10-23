@@ -25,8 +25,8 @@ export default function ShippingPage() {
               </div>
               <div className="text-center">
                 <Package className="w-12 h-12 text-green-600 mx-auto mb-3" />
-                <h3 className="font-semibold mb-1">Free Shipping</h3>
-                <p className="text-sm text-gray-600">On orders over £50</p>
+                <h3 className="font-semibold mb-1">Secure Packaging</h3>
+                <p className="text-sm text-gray-600">Safe & protected</p>
               </div>
               <div className="text-center">
                 <CheckCircle className="w-12 h-12 text-purple-600 mx-auto mb-3" />
@@ -48,15 +48,9 @@ export default function ShippingPage() {
           <CardContent>
             <div className="space-y-6">
               <div className="border-b pb-6">
-                <div className="flex justify-between items-start mb-3">
-                  <div>
-                    <h3 className="font-semibold text-lg">Standard Delivery</h3>
-                    <p className="text-gray-600">Royal Mail / DHL</p>
-                  </div>
-                  <div className="text-right">
-                    <div className="font-bold text-blue-600">FREE</div>
-                    <div className="text-sm text-gray-600">Orders over £50</div>
-                  </div>
+                <div className="mb-3">
+                  <h3 className="font-semibold text-lg">Standard Delivery</h3>
+                  <p className="text-gray-600">Royal Mail / DHL</p>
                 </div>
                 <div className="flex items-center gap-2 text-sm text-gray-600">
                   <Clock className="w-4 h-4" />
@@ -70,15 +64,9 @@ export default function ShippingPage() {
               </div>
 
               <div className="border-b pb-6">
-                <div className="flex justify-between items-start mb-3">
-                  <div>
-                    <h3 className="font-semibold text-lg">Express Delivery</h3>
-                    <p className="text-gray-600">DHL Express</p>
-                  </div>
-                  <div className="text-right">
-                    <div className="font-bold text-blue-600">£9.99</div>
-                    <div className="text-sm text-gray-600">All orders</div>
-                  </div>
+                <div className="mb-3">
+                  <h3 className="font-semibold text-lg">Express Delivery</h3>
+                  <p className="text-gray-600">DHL Express</p>
                 </div>
                 <div className="flex items-center gap-2 text-sm text-gray-600">
                   <Clock className="w-4 h-4" />
@@ -92,15 +80,9 @@ export default function ShippingPage() {
               </div>
 
               <div>
-                <div className="flex justify-between items-start mb-3">
-                  <div>
-                    <h3 className="font-semibold text-lg">International Shipping</h3>
-                    <p className="text-gray-600">DHL International / Courier</p>
-                  </div>
-                  <div className="text-right">
-                    <div className="font-bold text-blue-600">Calculated</div>
-                    <div className="text-sm text-gray-600">At checkout</div>
-                  </div>
+                <div className="mb-3">
+                  <h3 className="font-semibold text-lg">International Shipping</h3>
+                  <p className="text-gray-600">DHL International / Courier</p>
                 </div>
                 <div className="flex items-center gap-2 text-sm text-gray-600">
                   <Clock className="w-4 h-4" />
